@@ -653,8 +653,8 @@ jac check myproject/
 jac check myprogram.jac --no-print_errs
 jac check myprogram.jac --warnonly
 jac check myproject/ --ignore fixtures
-jac check myproject/ --ignore fixtures --ignore tests/
-jac check myproject/ --ignore _err.jac --ignore _syntax_err.jac
+jac check myproject/ --ignore "fixtures,tests"
+jac check myproject/ --ignore "_err.jac,_syntax_err.jac"
 """
 impl check(
     paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = ''
