@@ -656,13 +656,13 @@ jac check myproject/ --ignore fixtures
 jac check myproject/ --ignore fixtures --ignore tests/
 jac check myproject/ --ignore _err.jac --ignore _syntax_err.jac
 """
-impl check(paths: list, print_errs: bool = True, warnonly: bool = False) -> None {
+impl check(paths: list, print_errs: bool = True, warnonly: bool = False, ignore: list = []) -> None {
     import from jaclang.pycore.program { JacProgram }
     if isinstance(paths, str) {
         paths = [paths];
     }
-        def should_ignore_file(file_path: str, ignore_patterns: list) -> bool {
-        """Check if a file path matches any ignore pattern.""""
+    def should_ignore_file(file_path: str, ignore_patterns: list) -> bool {
+        """Check if a file path matches any ignore pattern."""
         file_path_str = str(file_path);
         
         for pattern in ignore_patterns {
@@ -720,8 +720,13 @@ impl check(paths: list, print_errs: bool = True, warnonly: bool = False) -> None
             }
         } elif path_obj.is_dir() {
             for jac_file in path_obj.glob('**/*.jac') {
+                file_str = str(jac_file);
+                # Skip files matching ignore patterns
+                if should_ignore_file(file_str, ignore) {
+                    continue;
+                }
                 total_files += 1;
-                (success, errs, warns) = check_single_file(prog, str(jac_file));
+                (success, errs, warns) = check_single_file(prog, file_str);
                 total_errors += errs;
                 total_warnings += warns;
                 if not success {
