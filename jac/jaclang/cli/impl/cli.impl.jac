@@ -656,14 +656,22 @@ jac check myproject/ --ignore fixtures
 jac check myproject/ --ignore fixtures --ignore tests/
 jac check myproject/ --ignore _err.jac --ignore _syntax_err.jac
 """
-impl check(paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = '') -> None {
+impl check(
+    paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = ''
+) -> None {
     import from jaclang.pycore.program { JacProgram }
     if isinstance(paths, str) {
         paths = [paths];
     }
     # Parse comma-separated ignore patterns into a list
-    ignore_list = [p.strip() for p in ignore.split(',') if p.strip()] if ignore else [];
-    # Check if a file path matches any ignore pattern.   
+    ignore_list = [
+        p.strip()
+        for p in ignore.split(',')
+        if p.strip()
+    ]
+    if ignore
+    else [];
+    # Check if a file path matches any ignore pattern.
     def should_ignore_file(file_path: str, ignore_patterns: list) -> bool {
         file_path_str = str(file_path);
 
