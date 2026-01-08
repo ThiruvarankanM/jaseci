@@ -661,8 +661,9 @@ impl check(paths: list, print_errs: bool = True, warnonly: bool = False, ignore:
     if isinstance(paths, str) {
         paths = [paths];
     }
+    # Check if a file path matches any ignore pattern.   
     def should_ignore_file(file_path: str, ignore_patterns: list) -> bool {
-        """Check if a file path matches any ignore pattern."""
+      
         file_path_str = str(file_path);
 
         for pattern in ignore_patterns {
