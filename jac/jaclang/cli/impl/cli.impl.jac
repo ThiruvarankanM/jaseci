@@ -664,10 +664,10 @@ impl check(paths: list, print_errs: bool = True, warnonly: bool = False, ignore:
     def should_ignore_file(file_path: str, ignore_patterns: list) -> bool {
         """Check if a file path matches any ignore pattern."""
         file_path_str = str(file_path);
-        
+
         for pattern in ignore_patterns {
             pattern_str = str(pattern).strip();
-            
+
             # Handle different pattern types
             if fnmatch.fnmatch(file_path_str, f"*/{pattern_str}*") {
                 return True;  # Matches directory in path
