@@ -37,9 +37,8 @@ def get_object(filename: str, id: str, session: str = '', main: bool = True) -> 
 def build(filename: str, typecheck: bool = False) -> None;
 
 @cmd_registry.register(source='jaclang')
-def check(
-    paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = ''
-) -> None;
+def check(paths: list, print_errs: bool = True, warnonly: bool = False,
+    ignore: str = '') -> None;
 
 @cmd_registry.register(source='jaclang')
 def lsp -> None;
