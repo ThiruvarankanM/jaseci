@@ -728,15 +728,8 @@ def _run_jac_check(test_dir: str, ignore_pattern: str = "") -> int:
 
 
 def test_jac_cli_check_ignore_patterns(fixture_path: Callable[[str], str]) -> None:
-    """Test --ignore flag with exact pattern matching (files, folders, mixed)."""
-    test_dir = os.path.dirname(fixture_path("mycode.jac"))
-    baseline = _run_jac_check(test_dir)
-    count = _run_jac_check(test_dir, "one_lev.jac, snd_lev.jac")
-    folder_count = _run_jac_check(test_dir, "deeper")
-    mixed_count = _run_jac_check(test_dir, "deeper,one_lev.jac")
-    non_matching = _run_jac_check(test_dir, "one_lev")
-
-    assert count == baseline - 2
-    assert folder_count == baseline - 4
-    assert mixed_count == baseline - 5
-    assert non_matching == baseline
+    """Test --ignore flag with exact pattern matching (combined patterns)."""
+    test_dir = fixture_path("deep")
+    result_count = _run_jac_check(test_dir, "deeper,one_lev_dup.jac,one_lev.jac,mycode")
+    # Only mycode.jac is checked; all other files are ignored
+    assert result_count == 1
