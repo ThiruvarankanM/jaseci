@@ -658,20 +658,14 @@ jac check myproject/ --ignore "fixtures,tests"
 jac check myproject/ --ignore "hello.jac,err2.jac"
 jac check myproject/ --ignore "deeper,err2.jac"
 """
-impl check(
-    paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = ''
-) -> None {
+impl check(paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = '') -> None {
     import from jaclang.pycore.program { JacProgram }
     if isinstance(paths, str) {
         paths = [paths];
     }
-    ignore_list = [
-        p.strip()
-        for p in ignore.split(',')
-        if p.strip()
-    ]
-    if ignore
-    else [];
+
+    ignore_list = [pattern.strip() for pattern in ignore.split(',') if pattern.strip()] if ignore else [];
+
     # Check if a file path matches any ignore pattern (exact filename or folder name only).
     def ignore_check(file_path: str, ignore_patterns: list) -> bool {
         path_parts = Path(file_path).parts;
