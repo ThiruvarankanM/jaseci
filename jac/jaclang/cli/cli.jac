@@ -1,6 +1,5 @@
 """Command line interface tool for the Jac language."""
 import ast as ast3;
-import fnmatch;
 import marshal;
 import os;
 import pickle;
