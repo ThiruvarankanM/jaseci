@@ -665,10 +665,14 @@ impl check(
     if isinstance(paths, str) {
         paths = [paths];
     }
-
     # Parse comma-separated ignore patterns
-    ignore_list = [p.strip() for p in ignore.split(',') if p.strip()] if ignore else [];
-
+    ignore_list = [
+        p.strip()
+        for p in ignore.split(',')
+        if p.strip()
+    ]
+    if ignore
+    else [];
     # Check if a file path matches any ignore pattern (exact filename or folder name only).
     def ignore_check(file_path: str, ignore_patterns: list) -> bool {
         path_parts = Path(file_path).parts;

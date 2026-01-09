@@ -712,18 +712,20 @@ def test_format_tracks_changed_files() -> None:
         assert "2/2" in stderr
         assert "(1 changed)" in stderr
 
+
 def _run_jac_check(test_dir: str, ignore_pattern: str = "") -> int:
     """Run jac check and return file count."""
     cmd = ["jac", "check", test_dir]
     if ignore_pattern:
         cmd.extend(["--ignore", ignore_pattern])
-    
+
     process = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
     stdout, stderr = process.communicate()
     match = re.search(r"Checked (\d+)", stdout + stderr)
     return int(match.group(1)) if match else 0
+
 
 def test_jac_cli_check_ignore_patterns(fixture_path: Callable[[str], str]) -> None:
     """Test --ignore flag with exact pattern matching (files, folders, mixed)."""
@@ -733,7 +735,7 @@ def test_jac_cli_check_ignore_patterns(fixture_path: Callable[[str], str]) -> No
     folder_count = _run_jac_check(test_dir, "deeper")
     mixed_count = _run_jac_check(test_dir, "deeper,one_lev.jac")
     non_matching = _run_jac_check(test_dir, "one_lev")
-    
+
     assert count == baseline - 2
     assert folder_count == baseline - 4
     assert mixed_count == baseline - 5
