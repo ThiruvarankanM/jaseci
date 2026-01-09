@@ -644,7 +644,7 @@ Args:
 paths: One or more paths to .jac files or directories containing .jac files
 print_errs: Print detailed error messages (default: True)
 warnonly: Treat errors as warnings - report but exit with success (default: False)
-ignore: Patterns to exclude from type checking (supports glob patterns)
+ignore: Comma-separated patterns to exclude from type checking (exact filename or folder name matching only)
 
 Examples:
 jac check myprogram.jac
@@ -653,8 +653,10 @@ jac check myproject/
 jac check myprogram.jac --no-print_errs
 jac check myprogram.jac --warnonly
 jac check myproject/ --ignore fixtures
+jac check myproject/ --ignore=fixtures
 jac check myproject/ --ignore "fixtures,tests"
-jac check myproject/ --ignore "_err.jac,_syntax_err.jac"
+jac check myproject/ --ignore "hello.jac,err2.jac"
+jac check myproject/ --ignore "deeper,err2.jac"
 """
 impl check(
     paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = ''
@@ -663,33 +665,18 @@ impl check(
     if isinstance(paths, str) {
         paths = [paths];
     }
-    # Parse comma-separated ignore patterns into a list
-    ignore_list = [
-        p.strip()
-        for p in ignore.split(',')
-        if p.strip()
-    ]
-    if ignore
-    else [];
-    # Check if a file path matches any ignore pattern.
-    def should_ignore_file(file_path: str, ignore_patterns: list) -> bool {
-        file_path_str = str(file_path);
+
+    # Parse comma-separated ignore patterns
+    ignore_list = [p.strip() for p in ignore.split(',') if p.strip()] if ignore else [];
+
+    # Check if a file path matches any ignore pattern (exact filename or folder name only).
+    def ignore_check(file_path: str, ignore_patterns: list) -> bool {
+        path_parts = Path(file_path).parts;
 
         for pattern in ignore_patterns {
-            pattern_str = str(pattern).strip();
-
-            # Handle different pattern types
-            if fnmatch.fnmatch(file_path_str, f"*/{pattern_str}*") {
-                return True;  # Matches directory in path
-
-            }
-            if fnmatch.fnmatch(file_path_str, pattern_str) {
-                return True;  # Exact match
-
-            }
-            if fnmatch.fnmatch(file_path_str, f"*{pattern_str}*") {
-                return True;  # Substring match
-
+            # Exact match for filename or folder name anywhere in path
+            if str(pattern).strip() in path_parts {
+                return True;
             }
         }
         return False;
@@ -735,7 +722,7 @@ impl check(
             for jac_file in path_obj.glob('**/*.jac') {
                 file_str = str(jac_file);
                 # Skip files matching ignore patterns
-                if should_ignore_file(file_str, ignore_list) {
+                if ignore_check(file_str, ignore_list) {
                     continue;
                 }
                 total_files += 1;
