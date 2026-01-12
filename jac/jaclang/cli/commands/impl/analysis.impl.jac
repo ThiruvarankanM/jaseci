@@ -7,10 +7,23 @@ import sys;
 import from pathlib { Path }
 
 """Run type checker for specified .jac files."""
-impl check(paths: list, print_errs: bool = True, warnonly: bool = False) -> int {
+impl check(paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = "") -> int {
     import from jaclang.pycore.program { JacProgram }
     if isinstance(paths, str) {
         paths = [paths];
+    }
+    # Parse ignore patterns from comma-separated string
+    ignore_list = [p.strip() for p in ignore.split(",") if p.strip()] if ignore else [];
+    # Check if a file path matches any ignore pattern (exact filename or folder name only)
+    def ignore_check(file_path: str, ignore_patterns: list) -> bool {
+        path_parts = Path(file_path).parts;
+        for pattern in ignore_patterns {
+            # Exact match for filename or folder name anywhere in path
+            if str(pattern).strip() in path_parts {
+                return True;
+            }
+        }
+        return False;
     }
     def check_single_file(prog: JacProgram, file_path: str) -> tuple[bool, int, int] {
         path_obj = Path(file_path);
@@ -42,21 +55,25 @@ impl check(paths: list, print_errs: bool = True, warnonly: bool = False) -> int 
     for path in paths {
         path_obj = Path(path);
         if path.endswith('.jac') {
-            total_files += 1;
-            (success, errs, warns) = check_single_file(prog, path);
-            total_errors += errs;
-            total_warnings += warns;
-            if not success {
-                failed_files += 1;
-            }
-        } elif path_obj.is_dir() {
-            for jac_file in path_obj.glob('**/*.jac') {
+            if not ignore_check(path, ignore_list) {
                 total_files += 1;
-                (success, errs, warns) = check_single_file(prog, str(jac_file));
+                (success, errs, warns) = check_single_file(prog, path);
                 total_errors += errs;
                 total_warnings += warns;
                 if not success {
                     failed_files += 1;
+                }
+            }
+        } elif path_obj.is_dir() {
+            for jac_file in path_obj.glob('**/*.jac') {
+                if not ignore_check(str(jac_file), ignore_list) {
+                    total_files += 1;
+                    (success, errs, warns) = check_single_file(prog, str(jac_file));
+                    total_errors += errs;
+                    total_warnings += warns;
+                    if not success {
+                        failed_files += 1;
+                    }
                 }
             }
         } else {
