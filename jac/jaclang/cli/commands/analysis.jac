@@ -48,7 +48,9 @@ glob registry = get_registry();
     ],
     group="analysis"
 )
-def check(paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = "") -> int;
+def check(
+    paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = ""
+) -> int;
 
 """Build the specified .jac file."""
 @registry.command(

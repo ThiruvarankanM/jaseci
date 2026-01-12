@@ -7,14 +7,20 @@ import sys;
 import from pathlib { Path }
 
 """Run type checker for specified .jac files."""
-impl check(paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = "") -> int {
+impl check(
+    paths: list, print_errs: bool = True, warnonly: bool = False, ignore: str = ""
+) -> int {
     import from jaclang.pycore.program { JacProgram }
     if isinstance(paths, str) {
         paths = [paths];
     }
-
-    ignore_list = [pattern.strip() for pattern in ignore.split(",") if pattern.strip()] if ignore else [];
-
+    ignore_list = [
+        pattern.strip()
+        for pattern in ignore.split(",")
+        if pattern.strip()
+    ]
+    if ignore
+    else [];
     def ignore_check(file_path: str, ignore_patterns: list) -> bool {
         path_parts = Path(file_path).parts;
         for pattern in ignore_patterns {
