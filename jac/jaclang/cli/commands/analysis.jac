@@ -43,7 +43,7 @@ glob registry = get_registry();
         ("jac check file1.jac file2.jac", "Check multiple files"),
         ("jac check myproject/", "Check all files in directory"),
         ("jac check myprogram.jac --warnonly", "Report but don't fail on errors"),
-        ("jac check myproject/ --ignore "fixtures,test.jac" ", "Check excluding folders,files"),
+        ("jac check myproject/ --ignore fixtures", "Check excluding folders,files"),
 
     ],
     group="analysis"
