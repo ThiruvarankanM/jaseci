@@ -10,7 +10,7 @@ def test_no_dupl_symbols() -> None:
     file_path = os.path.join(
         os.path.dirname(__file__),
         "fixtures",
-        "symtab_link_tests",
+        "symtab_build_tests",
         "no_dupls.jac",
     )
     mod = JacProgram().compile(file_path)
@@ -38,7 +38,7 @@ def test_package() -> None:
     file_path = os.path.join(
         os.path.dirname(__file__),
         "fixtures",
-        "symtab_link_tests",
+        "symtab_build_tests",
         "main.jac",
     )
     prog = JacProgram()
