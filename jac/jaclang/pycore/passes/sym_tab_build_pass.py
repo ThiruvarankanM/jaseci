@@ -375,7 +375,6 @@ class SymTabBuildPass(UniPass):
         if node.alias and isinstance(node.alias, uni.Name):
             node.alias.sym_tab.def_insert(node.alias, single_decl="context var")
 
-
     def enter_lambda_expr(self, node: uni.LambdaExpr) -> None:
         self.push_scope_and_link(node)
 
