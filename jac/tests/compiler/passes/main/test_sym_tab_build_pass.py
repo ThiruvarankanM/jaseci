@@ -49,28 +49,38 @@ def test_package() -> None:
 
 def test_inner_compr_iteration_variable() -> None:
     """Test that iteration variables in comprehensions are registered in symbol table."""
-    file_path = os.path.join(os.path.dirname(__file__), "fixtures", "symtab_build_tests", "list_comprehension.jac")
+    file_path = os.path.join(
+        os.path.dirname(__file__),
+        "fixtures",
+        "symtab_build_tests",
+        "list_comprehension.jac",
+    )
     mod = JacProgram().compile(file_path)
-    
+
     compr_names = mod.sym_tab.kid_scope[0].names_in_scope
-    
+
     # The iteration variable 'x' should be in the InnerCompr's symbol table
     assert "x" in compr_names, (
         "Iteration variable 'x' should be registered in InnerCompr symbol table"
     )
 
+
 def test_expr_as_item_alias_variable() -> None:
     """Test that alias variables in 'as' clauses are registered in symbol table."""
-    
-    file_path = os.path.join(os.path.dirname(__file__), "fixtures", "symtab_build_tests", "with_as_clause.jac")
+
+    file_path = os.path.join(
+        os.path.dirname(__file__),
+        "fixtures",
+        "symtab_build_tests",
+        "with_as_clause.jac",
+    )
     mod = JacProgram().compile(file_path)
-    
+
     with_names = mod.sym_tab.kid_scope[0].names_in_scope
-    
+
     # The alias variable 'f' should be in the WithStmt's symbol table
     assert "f" in with_names, (
         "Alias variable 'f' should be registered in WithStmt symbol table"
     )
-    
+
     assert str(with_names["f"].sym_type) == "variable"
-    
