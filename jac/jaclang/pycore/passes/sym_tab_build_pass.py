@@ -370,6 +370,12 @@ class SymTabBuildPass(UniPass):
     def exit_with_stmt(self, node: uni.WithStmt) -> None:
         self.pop_scope()
 
+    def exit_expr_as_item(self, node: uni.ExprAsItem) -> None:
+        """Register the alias variable in 'as' clauses (e.g., 'with open() as f')."""
+        if node.alias and isinstance(node.alias, uni.Name):
+            node.alias.sym_tab.def_insert(node.alias, single_decl="context var")
+
+
     def enter_lambda_expr(self, node: uni.LambdaExpr) -> None:
         self.push_scope_and_link(node)
 
