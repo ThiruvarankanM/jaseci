@@ -46,6 +46,7 @@ def test_package() -> None:
     assert prog.errors_had == []
     assert prog.warnings_had == []
 
+
 def test_inner_compr_iteration_variable() -> None:
     """Test that iteration variables in comprehensions are registered in symbol table."""
     file_path = os.path.join(
