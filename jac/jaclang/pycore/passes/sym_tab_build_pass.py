@@ -83,24 +83,22 @@ class SymTabBuildPass(UniPass):
     def exit_assignment(self, node: uni.Assignment) -> None:
         for i in node.target:
             if isinstance(i, uni.AstSymbolNode):
-                # Handle -> [a, b] = ...
-                # TODO: This can be recursive for nested structures
-                # example: [a, b, (c, d['e'], [f, g])] = [1, 2, (3, 4, [5, 6])]
-                if isinstance(i, uni.ListVal):
-                    for elem in i.values:
-                        if isinstance(elem, uni.AstSymbolNode):
-                            if (
-                                sym := elem.sym_tab.lookup(elem.sym_name, deep=False)
-                            ) is None:
-                                elem.sym_tab.def_insert(elem, single_decl="local var")
-                            else:
-                                sym.add_use(elem.name_spec)
-                # Case 2: a = b # NOTE: we're not considering the fact that the node could also be a complex
-                # expression like foo.bar() and assuming that it'll be just a name, this needs to be fixed.
+                # Handle nested unpacking: [a, b, (c, [f, g])] = ...
+                if isinstance(i, (uni.ListVal, uni.TupleVal)):
+                    self._def_insert_unpacking(i, i.sym_tab)
+                # Handle simple name: a = b
                 elif (sym := i.sym_tab.lookup(i.sym_name, deep=False)) is None:
                     i.sym_tab.def_insert(i, single_decl="local var")
                 else:
                     sym.add_use(i.name_spec)
+            # Handle complex expressions (person.name, items[0], etc.)
+            elif isinstance(i, uni.AtomTrailer):
+                # Track use of the base variable
+                chain = i.as_attr_list
+                if chain and isinstance(chain[0], uni.Name):
+                    base_var = chain[0]
+                    if sym := base_var.sym_tab.lookup(base_var.sym_name, deep=False):
+                        sym.add_use(base_var.name_spec)
 
     def exit_binary_expr(self, node: uni.BinaryExpr) -> None:
         """Handle walrus operator (:=) assignments."""
