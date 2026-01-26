@@ -83,17 +83,13 @@ class SymTabBuildPass(UniPass):
     def exit_assignment(self, node: uni.Assignment) -> None:
         for i in node.target:
             if isinstance(i, uni.AstSymbolNode):
-                # Handle nested unpacking: [a, b, (c, [f, g])] = ...
                 if isinstance(i, (uni.ListVal, uni.TupleVal)):
                     self._def_insert_unpacking(i, i.sym_tab)
-                # Handle simple name: a = b
                 elif (sym := i.sym_tab.lookup(i.sym_name, deep=False)) is None:
                     i.sym_tab.def_insert(i, single_decl="local var")
                 else:
                     sym.add_use(i.name_spec)
-            # Handle complex expressions (person.name, items[0], etc.)
             elif isinstance(i, uni.AtomTrailer):
-                # Track use of the base variable
                 chain = i.as_attr_list
                 if chain and isinstance(chain[0], uni.Name):
                     base_var = chain[0]
