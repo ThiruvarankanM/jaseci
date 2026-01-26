@@ -142,3 +142,22 @@ def test_except_variable_registration() -> None:
     assert "e" in except_clause.names_in_scope, (
         "Exception variable 'e' should be registered in except block symbol table"
     )
+
+
+def test_multiple_self_assignment() -> None:
+    """Test that all targets in multiple self assignments are registered."""
+    file_path = os.path.join(
+        os.path.dirname(__file__),
+        "fixtures",
+        "symtab_build_tests",
+        "self_multi_assign.jac",
+    )
+    mod = JacProgram().compile(file_path)
+
+    person_archetype = mod.sym_tab.kid_scope[0]
+
+    # Both x and y should be registered with 2 definitions (has + assignment)
+    for attr in ["x", "y"]:
+        assert attr in person_archetype.names_in_scope
+        assert len(person_archetype.names_in_scope[attr].defn) == 2
+
