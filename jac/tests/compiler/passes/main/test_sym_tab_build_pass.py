@@ -15,6 +15,7 @@ def fixture_path(filename: str) -> str:
         filename,
     )
 
+
 def test_no_dupl_symbols() -> None:
     """Basic test for pass."""
     file_path = fixture_path("no_dupls.jac")
@@ -138,4 +139,3 @@ def test_assignment_patterns() -> None:
     for var in ["person", "items", "container"]:
         assert var in scope_vars
         assert len(scope_vars[var].uses) > 0
-

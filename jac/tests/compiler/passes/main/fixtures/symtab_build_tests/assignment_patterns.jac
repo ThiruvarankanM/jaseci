@@ -6,18 +6,18 @@ with entry {
         has name: str = "";
         has age: int = 0;
     }
-    
+
     # Attribute assignment
     person = Person();
     person.name = "Jason";
     # Index/subscript assignment (covers both list[0] and dict['key'])
     items: list = [0, 0, 0];
     items[0] = 42;
-    
+
     # Chained attribute access (complex expression)
     obj Container {
         has nested: Person;
     }
     container = Container(nested=Person());
-    container.nested.name = "Jason Mars"; 
+    container.nested.name = "Jason Mars";
 }
