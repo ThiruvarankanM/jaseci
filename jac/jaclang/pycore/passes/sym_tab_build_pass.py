@@ -278,7 +278,8 @@ class SymTabBuildPass(UniPass):
         if not (node.parent and isinstance(node.parent, uni.Assignment)):
             return False
 
-        if node != node.parent.target[0]:  # TODO: Support multiple assignment targets
+        # Support multiple assignment targets (e.g., self.x = self.y = 10)
+        if node not in node.parent.target:
             return False
 
         chain = node.as_attr_list
