@@ -4,7 +4,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## jaclang 0.9.12 (Unreleased)
 
-- **Enhanced Symbol Table Tracking**: Fixed symbol table generation to support recursive nested unpacking (e.g., `[a, [b, c]] = val`) ensuring all inner variables are registered. Additionally, complex assignments involving attributes or indices (e.g., `obj.attr = val`, `items[0] = val`) now correctly track usage of the base variable.
+- **Support Go to Definition for Nested Unpacking Assignments**: Fixed symbol table generation to support recursive nested unpacking (e.g., `[a, [b, c]] = val`) ensuring all inner variables are registered.
 
 ## jaclang 0.9.11 (Latest Release)
 
