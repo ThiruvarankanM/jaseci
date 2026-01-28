@@ -89,12 +89,6 @@ class SymTabBuildPass(UniPass):
                     i.sym_tab.def_insert(i, single_decl="local var")
                 else:
                     sym.add_use(i.name_spec)
-            elif isinstance(i, uni.AtomTrailer):
-                chain = i.as_attr_list
-                if chain and isinstance(chain[0], uni.Name):
-                    base_var = chain[0]
-                    if sym := base_var.sym_tab.lookup(base_var.sym_name, deep=False):
-                        sym.add_use(base_var.name_spec)
 
     def exit_binary_expr(self, node: uni.BinaryExpr) -> None:
         """Handle walrus operator (:=) assignments."""

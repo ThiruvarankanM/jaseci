@@ -134,8 +134,3 @@ def test_assignment_patterns() -> None:
     # Nested unpacking variables should be defined
     for var in ["a2", "b2", "c2", "f2", "g2", "d"]:
         assert var in scope_vars
-
-    # Complex expression base variables should have uses tracked
-    for var in ["person", "items", "container"]:
-        assert var in scope_vars
-        assert len(scope_vars[var].uses) > 0
