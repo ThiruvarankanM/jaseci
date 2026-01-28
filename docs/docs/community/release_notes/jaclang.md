@@ -32,6 +32,8 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 - **Permissive Type Check for Node Collections in Connections**: The type checker now accepts collections (list, tuple, set, frozenset) on the right side of connection operators (`++>`, `<++>`, etc.). Previously, code like `root ++> [Node1(), Node2(), Node3()];` was incorrectly rejected. This is a temporary workaround until element type inference for list literals is fully implemented.
 
+- **Static files support HMR**: Added infrastructure for Hot Module Replacement during development. The file watcher now supports static assets files such as `.css` and images (`.png`, `.jpg`, `.jpeg`) in addition to `.jac` files, enabling automatic reloading of client-side code changes.
+
 ## jaclang 0.9.10
 
 - **Formatter Spacing Fixes**: Fixed extra spaces before semicolons in `report` and `del` statements, and corrected semantic definition formatting to properly handle dot notation and `=` operator spacing.
