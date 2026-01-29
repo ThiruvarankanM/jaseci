@@ -4,6 +4,8 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## byllm 0.4.17 (Unreleased)
 
+- **Must Declare Attributes Before Use**: You now have to write `has attribute_name;` at the top of your class before you can use `self.attribute_name` in your methods. This catches typos early (like writing `self.mesage` instead of `self.message`) and makes your code easier to understand. Your code won't run if you forget to declare an attribute.
+
 ## byllm 0.4.16 (Latest Release)
 
 - **MTIR-Powered Schema Generation**: `MTRuntime` now uses compile-time MTIR info for generating JSON schemas with semantic descriptions. Tool and return type schemas include semstrings extracted at compile time, providing richer context for LLM calls.

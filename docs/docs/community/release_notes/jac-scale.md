@@ -4,6 +4,8 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## jac-scale 0.1.4 (Unreleased)
 
+- **Must Declare Attributes Before Use**: You now have to write `has attribute_name;` at the top of your class before you can use `self.attribute_name` in your methods. This catches typos early (like writing `self.mesage` instead of `self.message`) and makes your code easier to understand. Your code won't run if you forget to declare an attribute.
+
 ## jac-scale 0.1.3 (Latest Release)
 
 - **Streaming Response Support**: Streaming responses are supported with walker spawn calls and function calls.
