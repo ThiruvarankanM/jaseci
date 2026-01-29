@@ -5,10 +5,12 @@ This document provides a summary of new features, improvements, and bug fixes in
 ## jac-scale 0.1.4 (Unreleased)
 
 - **Must Declare Attributes Before Use**: You now have to write `has attribute_name;` at the top of your class before you can use `self.attribute_name` in your methods. This catches typos early (like writing `self.mesage` instead of `self.message`) and makes your code easier to understand. Your code won't run if you forget to declare an attribute.
+- **Hot fix: call state**: Normal spawn calls inside API spawn calls supported.
 
 ## jac-scale 0.1.3 (Latest Release)
 
 - **Streaming Response Support**: Streaming responses are supported with walker spawn calls and function calls.
+- **Webhook Support**: Added webhook transport for walkers with HMAC-SHA256 signature verification. Walkers can be configured with `@restspec(webhook=True)` to receive webhook requests at `/webhook/{walker_name}` endpoints with API key authentication and signature verification.
 
 - **Storage Abstraction**: Introduced a pluggable storage abstraction layer for file operations.
   - Abstract `Storage` interface with standard operations: `upload`, `download`, `delete`, `list`, `copy`, `move`, `get_metadata`
