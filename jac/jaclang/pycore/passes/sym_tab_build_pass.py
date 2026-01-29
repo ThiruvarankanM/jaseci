@@ -258,8 +258,10 @@ class SymTabBuildPass(UniPass):
             archetype = ability.method_owner
             if isinstance(archetype, uni.Archetype):
                 attr_name = chain[1].sym_name
-                declared_attrs = {has_var.name.value for has_var in archetype.get_has_vars()}
-                
+                declared_attrs = {
+                    has_var.name.value for has_var in archetype.get_has_vars()
+                }
+
                 if attr_name in declared_attrs:
                     archetype.sym_tab.def_insert(chain[1], access_spec=archetype)
 

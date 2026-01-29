@@ -97,7 +97,7 @@ class SemanticAnalysisPass(UniPass):
     def enter_assignment(self, node: uni.Assignment) -> None:
         for target in node.target:
             self._update_ctx(target)
-           
+
         self._validate_self_attribute_assignment(node)
 
     def enter_in_for_stmt(self, node: uni.InForStmt) -> None:
@@ -123,25 +123,49 @@ class SemanticAnalysisPass(UniPass):
         ability = node.find_parent_of_type(uni.Ability)
         if not ability:
             impl_def = node.find_parent_of_type(uni.ImplDef)
-            ability = impl_def.decl_link if impl_def and isinstance(impl_def.decl_link, uni.Ability) else None
-        if not ability or not ability.is_method or ability.is_static or ability.is_cls_method or not isinstance(ability.method_owner, uni.Archetype):
+            ability = (
+                impl_def.decl_link
+                if impl_def and isinstance(impl_def.decl_link, uni.Ability)
+                else None
+            )
+        if (
+            not ability
+            or not ability.is_method
+            or ability.is_static
+            or ability.is_cls_method
+            or not isinstance(ability.method_owner, uni.Archetype)
+        ):
             return
 
         current_archetype = ability.method_owner
-        
+
         for i, attr_node in enumerate(chain[1:], start=1):
             attr_name = attr_node.sym_name
-            has_var = next((var for var in current_archetype.get_has_vars() if var.name.value == attr_name), None)
-            
+            has_var = next(
+                (
+                    var
+                    for var in current_archetype.get_has_vars()
+                    if var.name.value == attr_name
+                ),
+                None,
+            )
+
             if not has_var:
-                self.log_error(f"Attribute '{attr_name}' not declared with 'has'", node_override=attr_node)
+                self.log_error(
+                    f"Attribute '{attr_name}' not declared with 'has'",
+                    node_override=attr_node,
+                )
                 return
-            
+
             if i < len(chain) - 1:
                 if not has_var.type_tag or not has_var.type_tag.tag:
                     return
                 type_expr = has_var.type_tag.tag
-                type_sym = current_archetype.lookup(type_expr.value, deep=True) if isinstance(type_expr, uni.Name) else None
+                type_sym = (
+                    current_archetype.lookup(type_expr.value, deep=True)
+                    if isinstance(type_expr, uni.Name)
+                    else None
+                )
                 if not type_sym or not isinstance(type_sym.decl.name_of, uni.Archetype):
                     return
                 current_archetype = type_sym.decl.name_of
