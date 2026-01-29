@@ -73,10 +73,25 @@ def _proc_file(filename: str) -> tuple {
 impl run(filename: str, main: bool = True, cache: bool = True) -> int {
     _ensure_jac_runtime();
     import from jaclang.pycore.runtime { JacRuntime as Jac }
+  
     # Re-discover config from the file's directory (handles absolute paths)
     _discover_config_from_file(filename);
     (base, mod, mach) = _proc_file(filename);
     lng = filename.split('.')[-1];
+    
+    if lng == 'jac' {
+        Jac.get_program().compile(filename, no_cgen=True);
+        if any("not declared with 'has'" in str(e) for e in Jac.get_program().errors_had) {
+            for err in Jac.get_program().errors_had {
+                if "not declared with 'has'" in str(err) {
+                    print(err, file=sys.stderr);
+                }
+            }
+            mach.close();
+            return 1;
+        }
+    }
+    
     try {
         Jac.jac_import(
             target=mod,
