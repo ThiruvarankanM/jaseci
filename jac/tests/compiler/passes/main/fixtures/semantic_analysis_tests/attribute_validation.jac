@@ -35,7 +35,7 @@ obj Location {
 obj Company {
     has location: Location;
     has employee_count: int by postinit;
-    
+
     def setup {
         self.location.country.name = "USA";                   # Valid: all attributes declared
         self.location.country.capital.name = "DC";            # Valid: all attributes declared
@@ -44,7 +44,7 @@ obj Company {
         self.location.country.capital.region = "East";        # Error: 'region' not declared in City
         self.missing_attr = "test";                           # Error: 'missing_attr' not declared in Company
     }
-    
+
     def postinit -> None;
 }
 
