@@ -115,7 +115,7 @@ class SemanticAnalysisPass(UniPass):
     def _validate_self_attribute_assignment(self, node: uni.Assignment) -> None:
         """Enforce explicit 'has' declarations for self.attr assignments including nested chains."""
 
-        if node.loc and node.loc.mod_path and node.loc.mod_path.endswith(".py"):
+        if not (node.loc and node.loc.mod_path and node.loc.mod_path.endswith(".jac")):
             return
 
         if len(node.target) != 1 or not isinstance(node.target[0], uni.AtomTrailer):
@@ -143,7 +143,6 @@ class SemanticAnalysisPass(UniPass):
 
         current_archetype = ability.method_owner
 
-        # Check current class and parent classes for attribute
         def find_has_var(arch: uni.Archetype, attr_name: str) -> uni.HasVar | None:
             if var := next(
                 (var for var in arch.get_has_vars() if var.name.value == attr_name),
