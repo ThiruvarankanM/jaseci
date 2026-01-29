@@ -20,7 +20,7 @@ obj SavableObject {
 }
 
 walker create_custom_object {
-    has obj: SavableObject by postinit;
+    has obj: SavableObject | None = None;
 
     can enter1 with `root entry {
         self.obj = SavableObject(
