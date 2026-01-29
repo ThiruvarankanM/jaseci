@@ -4,7 +4,9 @@ import from jac_scale.abstractions.config.base_config { BaseConfig }
 
 """Configuration for Kubernetes deployments."""
 class KubernetesConfig(BaseConfig) {
-    has docker_image_name: str = '',
+    has app_name: str,
+        namespace: str,
+        docker_image_name: str = '',
         docker_username: str = '',
         docker_password: str = '',
         container_port: int = 8000,
@@ -78,9 +80,6 @@ class KubernetesConfig(BaseConfig) {
         additional_packages: list[str] = [],
         plugin_versions: dict[str, str] = {}
     ) -> None {
-        has app_name: str,
-            namespace: str;
-
         self.app_name = app_name;
         self.namespace = namespace;
         # Initialize derived class fields
