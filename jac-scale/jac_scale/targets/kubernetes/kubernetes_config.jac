@@ -78,6 +78,8 @@ class KubernetesConfig(BaseConfig) {
         additional_packages: list[str] = [],
         plugin_versions: dict[str, str] = {}
     ) -> None {
+        has app_name: str;
+        has namespace: str;
         self.app_name = app_name;
         self.namespace = namespace;
         # Initialize derived class fields

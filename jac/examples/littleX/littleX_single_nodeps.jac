@@ -135,6 +135,8 @@ walker update_profile(visit_profile) {
 walker get_profile(visit_profile) {}
 
 walker load_user_profiles {
+    has profiles: list;
+
     can load_profiles with `root entry {
         self.profiles: list = [];
         for each_root in allroots() {
