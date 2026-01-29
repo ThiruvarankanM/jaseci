@@ -32,10 +32,10 @@ import from kubernetes.client.exceptions { ApiException }
 
 """Kubernetes deployment target implementation."""
 class KubernetesTarget(DeploymentTarget) {
-    has k8s_config: KubernetesConfig;
-    has config: KubernetesConfig;
-    has env_list: list;
-    has logger: (Logger | None);
+    has k8s_config: KubernetesConfig,
+        config: KubernetesConfig,
+        env_list: list,
+        logger: (Logger | None);
 
     def init(
         self: KubernetesTarget,

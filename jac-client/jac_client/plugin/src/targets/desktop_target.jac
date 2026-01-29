@@ -8,11 +8,11 @@ import from jac_client.plugin.src.targets.registry { ClientTarget }
 
 """Desktop build target (placeholder for Phase 2)."""
 class DesktopTarget(ClientTarget) {
-    has name: str;
-    has default: bool;
-    has requires_setup: bool;
-    has config_section: str;
-    has output_dir: Path;
+    has name: str,
+        default: bool,
+        requires_setup: bool,
+        config_section: str,
+        output_dir: Path;
 
     def init(self: DesktopTarget) {
         self.name = "desktop";

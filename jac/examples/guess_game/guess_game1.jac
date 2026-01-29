@@ -3,8 +3,8 @@
 import random;
 
 class Game {
-    has attempts: int;
-    has won: bool;
+    has attempts: int,
+        won: bool;
 
     def init(self: Game, attempts: int = 10) {
         self.attempts = attempts;
