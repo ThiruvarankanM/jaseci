@@ -143,16 +143,20 @@ class SemanticAnalysisPass(UniPass):
 
         current_archetype = ability.method_owner
 
+        # Check current class and parent classes for attribute
+        def find_has_var(arch: uni.Archetype, attr_name: str) -> uni.HasVar | None:
+            if var := next((var for var in arch.get_has_vars() if var.name.value == attr_name), None):
+                return var
+            for base in arch.base_classes:
+                if isinstance(base, uni.Name) and (sym := arch.lookup(base.value, deep=True)):
+                    if isinstance(sym.decl.name_of, uni.Archetype):
+                        if parent_var := find_has_var(sym.decl.name_of, attr_name):
+                            return parent_var
+            return None
+
         for i, attr_node in enumerate(chain[1:], start=1):
             attr_name = attr_node.sym_name
-            has_var = next(
-                (
-                    var
-                    for var in current_archetype.get_has_vars()
-                    if var.name.value == attr_name
-                ),
-                None,
-            )
+            has_var = find_has_var(current_archetype, attr_name)
 
             if not has_var:
                 self.log_error(
