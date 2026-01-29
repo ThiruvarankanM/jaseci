@@ -2,7 +2,8 @@ glob RAD = 5.0;
 
 obj Circle1 {
     has radius: float,
-        age: int;
+        age: int,
+        color: str;
 
     def init(color: str) {
         self.color = color;
