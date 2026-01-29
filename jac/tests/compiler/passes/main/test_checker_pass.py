@@ -493,7 +493,7 @@ def test_checker_member_access(fixture_path: Callable[[str], str]) -> None:
         assert sym in str(mod.sym_tab.kid_scope[0].names_in_scope.values())
     age_sym = mod.sym_tab.kid_scope[0].lookup("age")
     assert age_sym is not None
-    assert "(NAME, age, 22:11 - 22:14)" in str(age_sym.uses)
+    assert "(NAME, age, 23:11 - 23:14)" in str(age_sym.uses)
     assert len(program.errors_had) == 1
     _assert_error_pretty_found(
         """
