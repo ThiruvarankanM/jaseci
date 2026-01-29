@@ -1,6 +1,6 @@
 obj Person {
     has age: int,
-        name: str;
+        name: str = "";
 
     def greet {
         self.name = "John";
