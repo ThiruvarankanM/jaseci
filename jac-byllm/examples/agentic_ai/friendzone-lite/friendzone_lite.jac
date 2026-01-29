@@ -63,8 +63,8 @@ node session {
 walker update_session {
     has image_url: str,
         utterance: str = "",
-        show_summary: bool,
-        terminate_conversation: bool;
+        show_summary: bool = False,
+        terminate_conversation: bool = False;
 
     can visit_session with `root entry {
         visit [-->](`?session) else {
