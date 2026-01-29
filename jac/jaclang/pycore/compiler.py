@@ -303,7 +303,7 @@ class JacCompiler:
                 passes=get_type_check_sched(),
                 cancel_token=cancel_token,
             )
-        if (not mod_targ.has_syntax_errors) and (not no_cgen):
+        if (not mod_targ.has_syntax_errors) and (not actual_program.errors_had) and (not no_cgen):
             codegen_sched = get_minimal_py_code_gen() if minimal else get_py_code_gen()
             self.run_schedule(
                 mod=mod_targ,

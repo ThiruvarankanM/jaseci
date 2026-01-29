@@ -253,12 +253,15 @@ class SymTabBuildPass(UniPass):
         chain = node.as_attr_list
         ability = node.find_parent_of_type(uni.Ability)
 
-        # Register the attribute in the archetype's symbol table
-        # Example: self.attr = value → add 'attr' to archetype.sym_tab
+        # Only register attributes that are explicitly declared with 'has'
         if ability and ability.method_owner:
             archetype = ability.method_owner
             if isinstance(archetype, uni.Archetype):
-                archetype.sym_tab.def_insert(chain[1], access_spec=archetype)
+                attr_name = chain[1].sym_name
+                declared_attrs = {has_var.name.value for has_var in archetype.get_has_vars()}
+                
+                if attr_name in declared_attrs:
+                    archetype.sym_tab.def_insert(chain[1], access_spec=archetype)
 
     def _is_self_member_assignment(self, node: uni.AtomTrailer) -> bool:
         """Check if the node represents a simple `self.attr = value` assignment."""
