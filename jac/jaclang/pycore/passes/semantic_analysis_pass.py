@@ -114,6 +114,10 @@ class SemanticAnalysisPass(UniPass):
 
     def _validate_self_attribute_assignment(self, node: uni.Assignment) -> None:
         """Enforce explicit 'has' declarations for self.attr assignments including nested chains."""
+        
+        if node.loc and node.loc.mod_path and node.loc.mod_path.endswith('.py'):
+            return
+        
         if len(node.target) != 1 or not isinstance(node.target[0], uni.AtomTrailer):
             return
         chain = node.target[0].as_attr_list
