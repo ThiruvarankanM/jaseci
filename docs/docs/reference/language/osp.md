@@ -830,6 +830,8 @@ From the reference examples, showing inheritance-based dispatch:
 
 ```jac
 walker ShoppingCart {
+    has total: float = 0.0;
+
     can process_item with Product entry {
         print(f"Processing {type(here).__name__}...");
 
