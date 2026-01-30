@@ -78,7 +78,7 @@ impl run(filename: str, main: bool = True, cache: bool = True) -> int {
     (base, mod, mach) = _proc_file(filename);
     lng = filename.split('.')[-1];
     if lng == 'jac' {
-        Jac.get_program().compile(filename, no_cgen=True);
+        Jac.get_program().compile(filename, no_cgen=True, type_check=True);
         if any(
             "not declared with 'has'" in str(e) for e in Jac.get_program().errors_had
         ) {

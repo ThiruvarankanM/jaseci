@@ -98,8 +98,6 @@ class SemanticAnalysisPass(UniPass):
         for target in node.target:
             self._update_ctx(target)
 
-        self._validate_self_attribute_assignment(node)
-
     def enter_in_for_stmt(self, node: uni.InForStmt) -> None:
         self._update_ctx(node.target)
 
@@ -111,77 +109,6 @@ class SemanticAnalysisPass(UniPass):
         self._update_ctx(node.target)
 
     # ----------------------- Utilities -------------------------
-
-    def _validate_self_attribute_assignment(self, node: uni.Assignment) -> None:
-        """Enforce explicit 'has' declarations for self.attr assignments including nested chains."""
-
-        if not (node.loc and node.loc.mod_path and node.loc.mod_path.endswith(".jac")):
-            return
-
-        if len(node.target) != 1 or not isinstance(node.target[0], uni.AtomTrailer):
-            return
-        chain = node.target[0].as_attr_list
-        if len(chain) < 2 or chain[0].sym_name != "self":
-            return
-
-        ability = node.find_parent_of_type(uni.Ability)
-        if not ability:
-            impl_def = node.find_parent_of_type(uni.ImplDef)
-            ability = (
-                impl_def.decl_link
-                if impl_def and isinstance(impl_def.decl_link, uni.Ability)
-                else None
-            )
-        if (
-            not ability
-            or not ability.is_method
-            or ability.is_static
-            or ability.is_cls_method
-            or not isinstance(ability.method_owner, uni.Archetype)
-        ):
-            return
-
-        current_archetype = ability.method_owner
-
-        def find_has_var(arch: uni.Archetype, attr_name: str) -> uni.HasVar | None:
-            if var := next(
-                (var for var in arch.get_has_vars() if var.name.value == attr_name),
-                None,
-            ):
-                return var
-            for base in arch.base_classes:
-                if (
-                    isinstance(base, uni.Name)
-                    and (sym := arch.lookup(base.value, deep=True))
-                    and isinstance(sym.decl.name_of, uni.Archetype)
-                    and (parent_var := find_has_var(sym.decl.name_of, attr_name))
-                ):
-                    return parent_var
-            return None
-
-        for i, attr_node in enumerate(chain[1:], start=1):
-            attr_name = attr_node.sym_name
-            has_var = find_has_var(current_archetype, attr_name)
-
-            if not has_var:
-                self.log_error(
-                    f"Attribute '{attr_name}' not declared with 'has'",
-                    node_override=attr_node,
-                )
-                return
-
-            if i < len(chain) - 1:
-                if not has_var.type_tag or not has_var.type_tag.tag:
-                    return
-                type_expr = has_var.type_tag.tag
-                type_sym = (
-                    current_archetype.lookup(type_expr.value, deep=True)
-                    if isinstance(type_expr, uni.Name)
-                    else None
-                )
-                if not type_sym or not isinstance(type_sym.decl.name_of, uni.Archetype):
-                    return
-                current_archetype = type_sym.decl.name_of
 
     def _change_atom_trailer_ctx(self, node: uni.AtomTrailer) -> None:
         """Mark final element in trailer chain as a Store context."""

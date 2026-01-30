@@ -241,3 +241,16 @@ impl TypeEvaluator._is_symbol_property(symbol: uni.Symbol) -> bool {
     }
     return False;
 }
+
+"""Check if an AtomTrailer node is in an assignment context (left side of =)."""
+impl TypeEvaluator._is_in_assignment_context(node_: uni.AtomTrailer) -> bool {
+    return isinstance(node_.parent, uni.Assignment);
+}
+
+"""Check if a ClassType represents a user-defined archetype (not builtin)."""
+impl TypeEvaluator._is_user_archetype(cls_type: types.ClassType) -> bool {
+    if cls_type.shared and isinstance(cls_type.shared.symbol_table, uni.Archetype) {
+        return not cls_type.shared.is_builtin_class;
+    }
+    return False;
+}

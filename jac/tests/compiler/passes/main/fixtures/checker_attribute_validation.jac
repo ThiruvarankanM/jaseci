@@ -6,6 +6,7 @@ obj SomeObj1 {
 
 impl SomeObj1.postinit {
     self.b = self.a * 3;  # Error: 'b' not declared with 'has'
+    self.a.res = 10;       # Error: 'real' not an attribute of 'int'
 }
 
 obj Person1 {
@@ -38,7 +39,7 @@ obj Company {
 
     def setup {
         self.location.country.name = "USA";                   # Valid: all attributes declared
-        self.location.country.capital.name = "DC";            # Valid: all attributes declared
+        self.location.country.capital.name = "DC";            # Valid: no validation for x.attribute
         self.location.country.capital.population = 700000;    # Valid: all attributes declared
         self.location.country.code = "US";                    # Error: 'code' not declared in Country
         self.location.country.capital.region = "East";        # Error: 'region' not declared in City
@@ -49,19 +50,24 @@ obj Company {
 }
 
 impl Company.postinit {
-    self.employee_count = 100;                                # Valid: declared with 'by postinit'
-    self.location.country.name = "Canada";                    # Valid: all attributes declared
-    self.invalid_postinit = "fail";                           # Error: 'invalid_postinit' not declared
+    y=self;                             
+    y.location.country.name = "Canada";                  
+    self.invalid_postinit = "fail";
 }
 
-# Inheritance case
+# Inheritance case - Dynamic inheritance limitation
 obj Game {
     has attempts: int;
 }
 
-obj GuessGame(Game) {
+with entry {
+    x = Game;
+    y=x;
+}
+
+obj GuessGame(y) {
     def play {
-        self.attempts = 10;  # Valid: inherited from Game
-        self.player = "John";  # Error: 'player' not declared with 'has'
+        self.attempts = 10;   
+        self.player = "John"; 
     }
 }

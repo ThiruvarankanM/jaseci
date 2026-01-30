@@ -125,6 +125,22 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                         expr.right.type = overloaded_ty or member_ty;
                         return expr.right.type;
                     }
+                    
+                    # Member not found - check if this is an assignment
+                    if self._is_in_assignment_context(expr) {
+                        if self._is_user_archetype(base_type) {
+                            self.add_diagnostic(
+                                expr.right,
+                                f"Attribute '{expr.right.value}' not declared with 'has'",
+                            );
+                        } else {
+                            # For non-user types (int, str, etc.), report attribute doesn't exist
+                            self.add_diagnostic(
+                                expr.right,
+                                f"'{base_type}' object has no attribute '{expr.right.value}'",
+                            );
+                        }
+                    }
                     return types.UnknownType();
                 }
             } elif expr.is_null_ok {
@@ -427,6 +443,30 @@ impl TypeEvaluator._get_type_of_symbol(symbol: uni.Symbol) -> TypeBase {
                 and node_.parent.parent
                 and isinstance(node_.parent.parent, uni.Assignment)
             ) {
+                # Validate that the attribute is declared with 'has' for user-defined types
+                atom_trailer = node_.parent;
+                if atom_trailer.is_attr and atom_trailer.target {
+                    base_type = self.get_type_of_expression(atom_trailer.target);
+                    if isinstance(base_type, types.ClassType) {
+                        # Check if the attribute exists in the class or its parents
+                        member = self._lookup_object_member(base_type, node_.value);
+                        if not member {
+                            if self._is_user_archetype(base_type) {
+                                self.add_diagnostic(
+                                    node_,
+                                    f"Attribute '{node_.value}' not declared with 'has'",
+                                );
+                            } else {
+                                # For builtin types, report standard Python error
+                                self.add_diagnostic(
+                                    node_,
+                                    f"'{base_type}' object has no attribute '{node_.value}'",
+                                );
+                            }
+                        }
+                    }
+                }
+                
                 # Member assignment with a type annotation: obj.member: <type> = <expr>
                 if node_.parent.parent.type_tag is not None {
                     annotation_type = self.get_type_of_expression(

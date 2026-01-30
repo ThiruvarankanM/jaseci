@@ -1283,3 +1283,30 @@ def test_postinit_fields_not_required_in_constructor(
         f"Expected no type checking errors, but got {len(program.errors_had)}: "
         + "\n".join([err.pretty_print() for err in program.errors_had])
     )
+
+def test_undeclared_attributes(fixture_path: Callable[[str], str]) -> None:
+    """Test detection of undeclared attributes with nesting and inheritance."""
+    prog = JacProgram()
+    prog.compile(fixture_path("checker_attribute_validation.jac"), type_check=True)
+
+    errors = [
+        str(e)
+        for e in prog.errors_had
+        if "not declared with 'has'" in str(e) or "has no attribute" in str(e)
+    ]
+    assert len(errors) == 8
+
+    # Undeclared attributes should error
+    for attr in [
+        "b",
+        "invalid",
+        "code",
+        "region",
+        "missing_attr",
+        "invalid_postinit",
+        "player",
+    ]:
+        assert any(f"Attribute '{attr}' not declared" in e for e in errors)
+
+    # Verify builtin type error message (int.res)
+    assert any("has no attribute res" in e for e in errors)
