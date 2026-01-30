@@ -8,6 +8,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 - **No-Print Lint Rule**: Added an opt-in `no-print` lint rule that warns on bare `print()` calls in `.jac` files, encouraging use of the console abstraction instead. Enable via `select = ["all", "no-print"]` in `[check.lint]`.
 - **ES Module Export Generation**: Exports now generated at compiler level via ESTree nodes instead of regex post-processing. Only `:pub` declarations are exported.
 - **Hot fix: call state**: Normal spawn calls inside API spawn calls supported.
+- **Enhanced Client Compilation for Development**: Improved the `jac start --dev` command to perform initial client compilation for HMR.
 
 ## jaclang 0.9.12 (Latest Release)
 
