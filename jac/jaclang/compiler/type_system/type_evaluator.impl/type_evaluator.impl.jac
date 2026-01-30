@@ -125,7 +125,6 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                         expr.right.type = overloaded_ty or member_ty;
                         return expr.right.type;
                     }
-                    
                     # Member not found - check if this is an assignment
                     if self._is_in_assignment_context(expr) {
                         if self._is_user_archetype(base_type) {
@@ -481,7 +480,6 @@ impl TypeEvaluator._get_type_of_symbol(symbol: uni.Symbol) -> TypeBase {
                         }
                     }
                 }
-                
                 # Member assignment with a type annotation: obj.member: <type> = <expr>
                 if node_.parent.parent.type_tag is not None {
                     annotation_type = self.get_type_of_expression(

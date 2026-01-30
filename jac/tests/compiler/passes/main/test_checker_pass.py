@@ -1324,6 +1324,7 @@ def test_postinit_fields_not_required_in_constructor(
         + "\n".join([err.pretty_print() for err in program.errors_had])
     )
 
+
 def test_undeclared_attributes(fixture_path: Callable[[str], str]) -> None:
     """Test detection of undeclared attributes with nesting and inheritance."""
     prog = JacProgram()

@@ -50,8 +50,8 @@ obj Company {
 }
 
 impl Company.postinit {
-    y=self;                             
-    y.location.country.name = "Canada";                  
+    y=self;
+    y.location.country.name = "Canada";
     self.invalid_postinit = "fail";
 }
 
@@ -67,7 +67,7 @@ with entry {
 
 obj GuessGame(y) {
     def play {
-        self.attempts = 10;   
-        self.player = "John"; 
+        self.attempts = 10;
+        self.player = "John";
     }
 }
