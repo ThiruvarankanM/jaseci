@@ -5,6 +5,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 ## byllm 0.4.17 (Unreleased)
 
 - **Must Declare Attributes Before Use**: You now have to write `has attribute_name;` at the top of your class before you can use `self.attribute_name` in your methods. This catches typos early (like writing `self.mesage` instead of `self.message`) and makes your code easier to understand. Your code won't run if you forget to declare an attribute.
+- **Enum Semantic Strings in Schema**: Added support for extracting semantic strings from enum members at compile time. Enum member descriptions (e.g., `sem Personality.INTROVERT = "Person who is reserved..."`) are now included in LLM schemas, providing richer context for enum selection.
 
 ## byllm 0.4.16 (Latest Release)
 
