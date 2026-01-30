@@ -311,3 +311,7 @@ storage_factory.jac
 importer_main.jac
 checker_attribute_validation.jac
 checker_type_narrowing.jac
+js_gen_bug.jac
+server.jac
+builtin.impl.jac
+module_manager.impl.jac
