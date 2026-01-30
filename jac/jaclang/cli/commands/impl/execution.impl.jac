@@ -81,7 +81,8 @@ impl run(filename: str, main: bool = True, cache: bool = True) -> int {
         try {
             Jac.get_program().compile(filename, no_cgen=True, type_check=True);
             if any(
-                "not declared with 'has'" in str(e) for e in Jac.get_program().errors_had
+                "not declared with 'has'" in str(e)
+                for e in Jac.get_program().errors_had
             ) {
                 for err in Jac.get_program().errors_had {
                     if "not declared with 'has'" in str(err) {
@@ -92,7 +93,7 @@ impl run(filename: str, main: bool = True, cache: bool = True) -> int {
                 return 1;
             }
         } except (OSError, Exception) {
-            # If validation compilation fails (e.g., directory imports), continue with normal execution
+        # If validation compilation fails (e.g., directory imports), continue with normal execution
         }
     }
     try {
