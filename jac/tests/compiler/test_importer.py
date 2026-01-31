@@ -80,7 +80,7 @@ def test_jac_py_import() -> None:
     stdout_value = captured_output.getvalue()
     assert "Hello World!" in stdout_value
     assert (
-        "{SomeObj(a=10): 'check'} [MyObj(apple=5, banana=7), MyObj(apple=5, banana=7)]"
+        "{SomeObj(a=10, b=20): 'check'} [MyObj(apple=5, banana=7), MyObj(apple=5, banana=7)]"
         in stdout_value
     )
 
@@ -99,7 +99,7 @@ def test_jac_py_import_auto() -> None:
     stdout_value = captured_output.getvalue()
     assert "Hello World!" in stdout_value
     assert (
-        "{SomeObj(a=10): 'check'} [MyObj(apple=5, banana=7), MyObj(apple=5, banana=7)]"
+        "{SomeObj(a=10, b=20): 'check'} [MyObj(apple=5, banana=7), MyObj(apple=5, banana=7)]"
         in stdout_value
     )
 
