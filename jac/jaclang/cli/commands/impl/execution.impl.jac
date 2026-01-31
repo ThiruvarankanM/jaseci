@@ -87,7 +87,7 @@ impl run(filename: str, main: bool = True, cache: bool = True) -> int {
             ) {
                 for err in Jac.get_program().errors_had {
                     if "not declared with 'has'" in str(err) {
-                        print(err, file=sys.stderr);
+                        console.error(str(err));
                     }
                 }
                 mach.close();
