@@ -8,6 +8,7 @@ import os;
 import sys;
 import types;
 import from typing { Any }
+import from jaclang.cli.console { console }
 
 glob _runtime_initialized = False;
 
@@ -56,7 +57,7 @@ def _proc_file(filename: str) -> tuple {
     } elif filename.endswith('.py') {
         mod = mod[:-3];
     } else {
-        print('Not a valid file!\nOnly supports `.jac` and `.py`', file=sys.stderr);
+        console.error('Not a valid file!\nOnly supports `.jac` and `.py`');
         <>exit(1);
     }
     # Only set base path if not already set (allows tests to override)
@@ -105,7 +106,7 @@ impl run(filename: str, main: bool = True, cache: bool = True) -> int {
         );
     } except Exception as e {
         import from jaclang.pycore.helpers { dump_traceback }
-        print(dump_traceback(e), file=sys.stderr);
+        console.error(dump_traceback(e));
         mach.close();
         return 1;
     }
@@ -138,13 +139,13 @@ impl enter(
         );
     } else {
         mach.close();
-        print('Not a valid file!\nOnly supports `.jac`', file=sys.stderr);
+        console.error('Not a valid file!\nOnly supports `.jac`');
         return 1;
     }
     if ret_module {
         (loaded_mod, ) = ret_module;
         if not loaded_mod {
-            print('Errors occurred while importing the module.', file=sys.stderr);
+            console.error('Errors occurred while importing the module.');
             mach.close();
             return 1;
         } else {
@@ -177,19 +178,17 @@ impl start(
     import from pathlib { Path }
     if not Path(filename).exists() {
         if filename == "main.jac" {
-            print(
-                f"Error: File 'main.jac' not found in the current directory.",
-                file=sys.stderr
+            console.error(
+                f"Error: File 'main.jac' not found in the current directory."
             );
-            print(f"  Current directory: {os.getcwd()}", file=sys.stderr);
-            print(
-                "  Please specify a file: jac start <filename.jac> or make sure main.jac exists in the current directory",
-                file=sys.stderr
+            console.error(f"  Current directory: {os.getcwd()}");
+            console.error(
+                "  Please specify a file: jac start <filename.jac> or make sure main.jac exists in the current directory"
             );
         } else {
-            print(f"Error: File '{filename}' not found.", file=sys.stderr);
-            print(f"  Current directory: {os.getcwd()}", file=sys.stderr);
-            print("  Please check the file path and try again.", file=sys.stderr);
+            console.error(f"Error: File '{filename}' not found.");
+            console.error(f"  Current directory: {os.getcwd()}");
+            console.error("  Please check the file path and try again.");
         }
         return 1;
     }
@@ -201,15 +200,15 @@ impl start(
         Jac.jac_import(target=mod, base_path=base, lng=lng);
         if Jac.program.errors_had {
             for error in Jac.program.errors_had {
-                print(f"Error: {error}", file=sys.stderr);
+                console.error(f"Error: {error}");
             }
             mach.close();
             return 1;
         }
     } except Exception as e {
         import from jaclang.pycore.helpers { dump_traceback }
-        print(f"Error loading {filename}: {e}", file=sys.stderr);
-        print(dump_traceback(e), file=sys.stderr);
+        console.error(f"Error loading {filename}: {e}");
+        console.error(dump_traceback(e));
         mach.close();
         return 1;
     }
@@ -230,8 +229,8 @@ impl start(
             server.print_endpoint_docs();
         } except Exception as e {
             import from jaclang.pycore.helpers { dump_traceback }
-            print(f"Error generating endpoint documentation: {e}", file=sys.stderr);
-            print(dump_traceback(e), file=sys.stderr);
+            console.error(f"Error generating endpoint documentation: {e}");
+            console.error(dump_traceback(e));
             mach.close();
             return 1;
         } finally {
@@ -249,16 +248,14 @@ impl start(
     if dev {
         # Check if watchdog is available in the project environment
         if not _check_watchdog_available() {
-            print(
-                "\n  Error: --dev requires 'watchdog' package to be installed.\n",
-                file=sys.stderr
+            console.error(
+                "\n  Error: --dev requires 'watchdog' package to be installed.\n"
             );
-            print(
-                "  The 'watchdog' package is listed in [dev-dependencies] of jac.toml.",
-                file=sys.stderr
+            console.error(
+                "  The 'watchdog' package is listed in [dev-dependencies] of jac.toml."
             );
-            print("  Install it by running:\n", file=sys.stderr);
-            print("    jac install --dev\n", file=sys.stderr);
+            console.error("  Install it by running:\n");
+            console.error("    jac install --dev\n");
             mach.close();
             return 1;
         }
@@ -276,31 +273,35 @@ impl start(
                 server.enable_hmr(hot_reloader);
             }
         } except ImportError as e {
-            print(f"Error: Could not initialize HMR: {e}", file=sys.stderr, flush=True);
-            print(
-                "\nMake sure 'watchdog' is installed by running: jac install --dev",
-                file=sys.stderr,
-                flush=True
+            console.error(f"Error: Could not initialize HMR: {e}");
+            console.error(
+                "\nMake sure 'watchdog' is installed by running: jac install --dev"
             );
             mach.close();
             return 1;
         } except Exception as e {
-            print(
-                f"Warning: HMR initialization failed: {e}", file=sys.stderr, flush=True
-            );
+            console.error(f"Warning: HMR initialization failed: {e}");
         }
         # Start Vite dev server if client mode enabled
         if not no_client {
+            # Do initial compilation for HMR
+            try {
+                compiler = server.introspector._bundle_builder._get_compiler();
+                compiler.compile(server.introspector._module, Path(filename));
+                console.print("  ✔ Initial client compilation completed");
+            } except Exception as e {
+                console.error(f"Warning: Initial client compilation failed: {e}");
+            }
             vite_process = _start_vite_dev_server(base, vite_port, actual_api_port);
         }
     }
     # Print startup message
     _print_startup_message(dev, no_client, port, actual_api_port, base);
     try {
-        server.start(dev=dev);
+        server.start(dev=dev, no_client=no_client);
         return 0;
     } except KeyboardInterrupt {
-        print('\nShutting down...');
+        console.print('\nShutting down...');
         if hot_reloader {
             hot_reloader.stop();
         }
@@ -312,8 +313,8 @@ impl start(
         return 0;
     } except Exception as e {
         import from jaclang.pycore.helpers { dump_traceback }
-        print(f"Server error: {e}", file=sys.stderr);
-        print(dump_traceback(e), file=sys.stderr);
+        console.error(f"Server error: {e}");
+        console.error(dump_traceback(e));
         if hot_reloader {
             hot_reloader.stop();
         }
@@ -402,7 +403,6 @@ def _count_jac_files(directory: str) -> int {
 def _print_startup_message(
     dev: bool, no_client: bool, port: int, api_port: int, base_path: str = '.'
 ) -> None {
-    import from jaclang.cli.console { console }
     import from importlib.metadata { version as pkg_version }
 
     # Print header
@@ -486,13 +486,12 @@ def _start_vite_dev_server(base_path: str, vite_port: int, api_port: int) -> Any
         # Start the dev server
         return bundler.start_dev_server(vite_port);
     } except ImportError as e {
-        print(
-            f"[Vite] Warning: jac-client not installed, skipping Vite dev server: {e}",
-            file=sys.stderr
+        console.error(
+            f"[Vite] Warning: jac-client not installed, skipping Vite dev server: {e}"
         );
         return None;
     } except Exception as e {
-        print(f"[Vite] Warning: Could not start Vite dev server: {e}", file=sys.stderr);
+        console.error(f"[Vite] Warning: Could not start Vite dev server: {e}");
         return None;
     }
 }
@@ -512,16 +511,16 @@ impl debug(filename: str, main: bool = True, cache: bool = False) -> int {
                 run(filename, main, cache);
             } else {
                 func = types.FunctionType(code, globals());
-                print('Debugging with Jac debugger.\n');
+                console.print('Debugging with Jac debugger.\n');
                 db.runcall(func);
-                print('Done debugging.');
+                console.print('Done debugging.');
             }
         } else {
-            print(f"Error while generating bytecode in {filename}.", file=sys.stderr);
+            console.error(f"Error while generating bytecode in {filename}.");
             return 1;
         }
     } else {
-        print('Not a .jac file.', file=sys.stderr);
+        console.error('Not a .jac file.');
         return 1;
     }
     return 0;

@@ -315,3 +315,5 @@ js_gen_bug.jac
 server.jac
 builtin.impl.jac
 module_manager.impl.jac
+jaccomplete.jac
+jaccomplete.impl.jac
