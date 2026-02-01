@@ -320,7 +320,6 @@ impl TypeEvaluator._report_attribute_error(
 impl TypeEvaluator._validate_self_attribute(
     base_type: types.ClassType, attr_name_node: uni.Name, attr_name: str
 ) -> None {
-
     if self._lookup_object_member(base_type, attr_name) {
         return;
     }
