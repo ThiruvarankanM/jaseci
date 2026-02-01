@@ -317,11 +317,9 @@ impl TypeEvaluator._validate_self_attribute(
     if self._lookup_object_member(base_type, attr_name) {
         return;
     }
-    
     # Skip validation for classes with external base classes or Python builtins
     if self._skip_validation(base_type, attr_name) {
         return;
     }
-    
     self._report_attribute_error(base_type, attr_name_node, attr_name);
 }
