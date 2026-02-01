@@ -286,6 +286,10 @@ impl TypeEvaluator._skip_validation(base_type: types.ClassType, attr_name: str) 
     if self.is_any_type(base_type) or isinstance(base_type, types.UnknownType) {
         return True;
     }
+    # Skip for Python classes from .py files (not builtins) - they may have dynamic attributes
+    if not self._is_user_archetype(base_type) and not base_type.shared.is_builtin_class {
+        return True;
+    }
     # Skip for classes with Python base classes (they may have dynamic attributes)
     if self._has_external_base_class(base_type) {
         return True;
@@ -316,7 +320,7 @@ impl TypeEvaluator._report_attribute_error(
 impl TypeEvaluator._validate_self_attribute(
     base_type: types.ClassType, attr_name_node: uni.Name, attr_name: str
 ) -> None {
-    # Check if attribute exists in the class (including inherited members)
+
     if self._lookup_object_member(base_type, attr_name) {
         return;
     }
