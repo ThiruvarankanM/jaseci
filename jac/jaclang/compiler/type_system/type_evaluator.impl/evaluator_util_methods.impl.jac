@@ -282,12 +282,15 @@ impl TypeEvaluator._has_external_base_class(cls_type: types.ClassType) -> bool {
 
 """Determine if validation should be skipped for a class type."""
 impl TypeEvaluator._skip_validation(base_type: types.ClassType, attr_name: str) -> bool {
-    if not self._is_user_archetype(base_type) {
+    # Skip for Any type or UnknownType (dynamic types)
+    if self.is_any_type(base_type) or isinstance(base_type, types.UnknownType) {
         return True;
     }
+    # Skip for classes with Python base classes (they may have dynamic attributes)
     if self._has_external_base_class(base_type) {
         return True;
     }
+    # Skip for Python dunders (available on all objects)
     if attr_name.startswith('__') and attr_name.endswith('__') {
         return True;
     }
