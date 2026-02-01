@@ -244,6 +244,10 @@ impl TypeEvaluator._is_symbol_property(symbol: uni.Symbol) -> bool {
 
 """Check if a ClassType represents a user-defined archetype (not builtin)."""
 impl TypeEvaluator._is_user_archetype(cls_type: types.ClassType) -> bool {
+    # Guard against UnknownType from recursive calls (e.g., checking base classes)
+    if not isinstance(cls_type, types.ClassType) {
+        return False;
+    }
     if cls_type.shared and isinstance(cls_type.shared.symbol_table, uni.Archetype) {
         # Check that it's not from a Python file
         if cls_type.shared.symbol_table.loc.mod_path.endswith(".py") {
@@ -277,14 +281,17 @@ impl TypeEvaluator._has_external_base_class(cls_type: types.ClassType) -> bool {
 }
 
 """Determine if validation should be skipped for a class type."""
-impl TypeEvaluator._skip_validation(base_type: types.ClassType) -> bool {
-    # Skip validation if:
-    # 1. Not a user archetype (builtin or Python class), OR
-    # 2. Has external base classes (inherits from Python)
+impl TypeEvaluator._skip_validation(base_type: types.ClassType, attr_name: str) -> bool {
     if not self._is_user_archetype(base_type) {
-        return False;
+        return True;
     }
-    return self._has_external_base_class(base_type);
+    if self._has_external_base_class(base_type) {
+        return True;
+    }
+    if attr_name.startswith('__') and attr_name.endswith('__') {
+        return True;
+    }
+    return False;
 }
 
 """Report appropriate error message based on class type."""
@@ -310,11 +317,10 @@ impl TypeEvaluator._validate_self_attribute(
     if self._lookup_object_member(base_type, attr_name) {
         return;
     }
-    # Skip validation for classes with external base classes
-    if self._skip_validation(base_type) {
-        return;  # Avoid false positives from Python dynamic attributes
-
-    }
-    # Report appropriate error based on class type
+    
+    # Skip validation for classes with external base classes or Python builtins
+    if self._skip_validation(base_type, attr_name) {
+        return;  
+    
     self._report_attribute_error(base_type, attr_name_node, attr_name);
 }
