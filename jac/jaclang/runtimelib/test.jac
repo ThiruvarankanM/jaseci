@@ -1,7 +1,7 @@
 """Core constructs for Jac Language."""
 import unittest;
 import from collections.abc { Callable }
-import from typing {Any, ClassVar }
+import from typing { Any, ClassVar }
 """Jac test result class."""
 obj JacTestResult(unittest.TextTestResult) {
     has stream: Any,

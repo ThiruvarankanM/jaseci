@@ -126,9 +126,12 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                         return expr.right.type;
                     }
                     # Member not found - validate if it's part of a self.* chain (but not a method call)
-                    if self._is_self_attribute_chain(expr) and not isinstance(expr.parent, uni.FuncCall) {
+                    if self._is_self_attribute_chain(expr)
+                    and not isinstance(expr.parent, uni.FuncCall) {
                         if isinstance(base_type, types.ClassType) {
-                            self._validate_self_attribute(base_type, expr.right, expr.right.value);
+                            self._validate_self_attribute(
+                                base_type, expr.right, expr.right.value
+                            );
                         }
                     }
                     return types.UnknownType();
