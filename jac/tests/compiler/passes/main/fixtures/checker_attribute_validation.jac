@@ -1,22 +1,13 @@
 # Simple cases - basic attribute validation
 obj SomeObj1 {
-    has a: int = 5;
+    has a: int by postinit;
 
     def postinit -> None;
 }
 
 impl SomeObj1.postinit{
-    self.b = self.a * 3;  # Error: 'b' not declared with 'has'
-    self.a.res = 10;  # Error: 'real' not an attribute of 'int'
-}
-
-obj Person1 {
-    has greet_msg: str = "";
-
-    def greet {
-        self.greet_msg = "hi";  # Valid: greet_msg is declared
-        self.invalid = "test";  # Error: 'invalid' not declared with 'has'
-    }
+    self.a = self.b + 5;  # Error: 'b' not declared with 'has' (right side)
+    self.a.res = 10;  # Error: 'res' not an attribute of 'int'
 }
 
 # Nested objects for complex tests
@@ -37,7 +28,6 @@ obj Location {
 # Hardest case: Deep nesting (self.x.y.z.w)
 obj Company {
     has location: Location;
-    has employee_count: int by postinit;
 
     def setup {
         self.location.country.name = "USA";  # Valid: all attributes declared
@@ -48,13 +38,6 @@ obj Company {
         self.missing_attr = "test";  # Error: 'missing_attr' not declared in Company
     }
 
-    def postinit -> None;
-}
-
-impl Company.postinit{
-    y = self;
-    y.location.country.name = "Canada";
-    self.invalid_postinit = "fail";
 }
 
 # Inheritance case - Dynamic inheritance limitation
@@ -71,5 +54,6 @@ obj GuessGame(y) {
     def play {
         self.attempts = 10;
         self.player = "John";
+        self.a.b = 5;  # Error: 'a' not declared in GuessGame or Game
     }
 }

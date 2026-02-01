@@ -148,8 +148,16 @@ obj TypeEvaluator {
     def is_sub_class(super_cls: types.ClassType, sub_cls: types.ClassType) -> bool;
     def _is_ability_classmethod(node_: uni.Ability) -> bool;
     def _is_symbol_property(symbol: uni.Symbol) -> bool;
-    def _is_in_assignment_context(node_: uni.AtomTrailer) -> bool;
     def _is_user_archetype(cls_type: types.ClassType) -> bool;
+    def _is_self_attribute_chain(atom_trailer: uni.AtomTrailer) -> bool;
+    def _has_external_base_class(cls_type: types.ClassType) -> bool;
+    def _skip_validation(base_type: types.ClassType) -> bool;
+    def _report_attribute_error(
+        base_type: types.ClassType, attr_name_node: uni.Name, attr_name: str
+    ) -> None;
+    def _validate_self_attribute(
+        base_type: types.ClassType, attr_name_node: uni.Name, attr_name: str
+    ) -> None;
     def _assign_class(src_type: types.ClassType, dest_type: types.ClassType) -> bool;
     # This function is a combination of the bellow pyright functions.
     #  - getDeclaredTypeOfSymbol
