@@ -155,9 +155,11 @@ obj TypeEvaluator {
     def _report_attribute_error(
         base_type: types.ClassType, attr_name_node: uni.Name, attr_name: str
     ) -> None;
+
     def _validate_self_attribute(
         base_type: types.ClassType, attr_name_node: uni.Name, attr_name: str
     ) -> None;
+
     def _assign_class(src_type: types.ClassType, dest_type: types.ClassType) -> bool;
     # This function is a combination of the bellow pyright functions.
     #  - getDeclaredTypeOfSymbol
