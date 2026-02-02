@@ -490,9 +490,7 @@ impl TypeEvaluator._get_type_of_symbol(symbol: uni.Symbol) -> TypeBase {
                 ) {
                     base_type = self.get_type_of_expression(atom_trailer.target);
                     if isinstance(base_type, types.ClassType) {
-                        self._validate_self_attribute(
-                            base_type, node_, node_.value
-                        );
+                        self._validate_self_attribute(base_type, node_, node_.value);
                     }
                 }
                 # Member assignment with a type annotation: obj.member: <type> = <expr>
