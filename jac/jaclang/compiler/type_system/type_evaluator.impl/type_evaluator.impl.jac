@@ -136,13 +136,14 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                         return expr.right.type;
                     }
                     # Member not found - validate if it's part of a self.* chain (but not a method call)
-                    if self._is_self_attribute_chain(expr)
-                    and not isinstance(expr.parent, uni.FuncCall) {
-                        if isinstance(base_type, types.ClassType) {
-                            self._validate_self_attribute(
-                                base_type, expr.right, expr.right.value
-                            );
-                        }
+                    if (
+                        self._is_self_attribute_chain(expr)
+                        and not isinstance(expr.parent, uni.FuncCall)
+                        and isinstance(base_type, types.ClassType)
+                    ) {
+                        self._validate_self_attribute(
+                            base_type, expr.right, expr.right.value
+                        );
                     }
                     return types.UnknownType();
                 }
@@ -483,15 +484,15 @@ impl TypeEvaluator._get_type_of_symbol(symbol: uni.Symbol) -> TypeBase {
             ) {
                 # Only validate self.attribute assignments (not all object assignments)
                 atom_trailer = node_.parent;
-                if atom_trailer.is_attr and atom_trailer.target {
-                    if isinstance(atom_trailer.target, uni.Name)
-                    and atom_trailer.target.value == "self" {
-                        base_type = self.get_type_of_expression(atom_trailer.target);
-                        if isinstance(base_type, types.ClassType) {
-                            self._validate_self_attribute(
-                                base_type, node_, node_.value
-                            );
-                        }
+                if (
+                    atom_trailer.is_attr
+                    and self._is_self_attribute_chain(atom_trailer)
+                ) {
+                    base_type = self.get_type_of_expression(atom_trailer.target);
+                    if isinstance(base_type, types.ClassType) {
+                        self._validate_self_attribute(
+                            base_type, node_, node_.value
+                        );
                     }
                 }
                 # Member assignment with a type annotation: obj.member: <type> = <expr>
