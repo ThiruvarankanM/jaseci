@@ -106,13 +106,16 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
         # Fall back to __init__ if __new__ didn't have meaningful params
         if not validated {
             if init_method := self._lookup_class_member(caller_type, "__init__") {
-                self._validate_constructor_method(
-                    expr, self.get_type_of_symbol(init_method.symbol)
-                );
-            } elif caller_type.is_data_class() {
-                self._validate_constructor_method(
-                    expr, self._create_dataclass_init_method(caller_type)
-                );
+                # Skip object.__init__ (accepts anything), use dataclass init instead
+                defining_class = init_method.symbol.decl.name_of.find_parent_of_type(uni.Archetype);
+                is_from_object = defining_class and defining_class.name_spec and defining_class.name_spec.sym_name == "object";
+                if not is_from_object {
+                    self._validate_constructor_method(expr, self.get_type_of_symbol(init_method.symbol));
+                    validated = True;
+                }
+            }
+            if not validated and caller_type.is_data_class() {
+                self._validate_constructor_method(expr, self._create_dataclass_init_method(caller_type));
             }
         }
         return caller_type.clone_as_instance();

@@ -249,6 +249,7 @@ impl TypeEvaluator._is_user_archetype(cls_type: types.ClassType) -> bool {
         and cls_type.shared
         and isinstance(cls_type.shared.symbol_table, uni.Archetype)
         and not cls_type.shared.symbol_table.loc.mod_path.endswith(".py")
+        and not cls_type.shared.symbol_table.loc.mod_path.endswith(".na.jac")  
         and not cls_type.shared.is_builtin_class
     );
 }
