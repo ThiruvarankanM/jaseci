@@ -244,18 +244,13 @@ impl TypeEvaluator._is_symbol_property(symbol: uni.Symbol) -> bool {
 
 """Check if a ClassType represents a user-defined archetype (not builtin)."""
 impl TypeEvaluator._is_user_archetype(cls_type: types.ClassType) -> bool {
-    # Guard against UnknownType from recursive calls (e.g., checking base classes)
-    if not isinstance(cls_type, types.ClassType) {
-        return False;
-    }
-    if cls_type.shared and isinstance(cls_type.shared.symbol_table, uni.Archetype) {
-        # Check that it's not from a Python file
-        if cls_type.shared.symbol_table.loc.mod_path.endswith(".py") {
-            return False;
-        }
-        return not cls_type.shared.is_builtin_class;
-    }
-    return False;
+    return (
+        isinstance(cls_type, types.ClassType)
+        and cls_type.shared
+        and isinstance(cls_type.shared.symbol_table, uni.Archetype)
+        and not cls_type.shared.symbol_table.loc.mod_path.endswith(".py")
+        and not cls_type.shared.is_builtin_class
+    );
 }
 
 """Check if an AtomTrailer chain starts with 'self'."""
@@ -269,36 +264,22 @@ impl TypeEvaluator._is_self_attribute_chain(atom_trailer: uni.AtomTrailer) -> bo
 
 """Check if a class has any external (non-user) base classes."""
 impl TypeEvaluator._has_external_base_class(cls_type: types.ClassType) -> bool {
-    if not (cls_type.shared and cls_type.shared.base_classes) {
-        return False;
-    }
-    for base_cls in cls_type.shared.base_classes {
-        if not self._is_user_archetype(base_cls) {
-            return True;
-        }
-    }
-    return False;
+    return (
+        cls_type.shared
+        and cls_type.shared.base_classes
+        and any(not self._is_user_archetype(base_cls) for base_cls in cls_type.shared.base_classes)
+    );
 }
 
 """Determine if validation should be skipped for a class type."""
 impl TypeEvaluator._skip_validation(base_type: types.ClassType, attr_name: str) -> bool {
-    # Skip for Any type or UnknownType (dynamic types)
-    if self.is_any_type(base_type) or isinstance(base_type, types.UnknownType) {
-        return True;
-    }
-    # Skip for Python classes from .py files (not builtins) - they may have dynamic attributes
-    if not self._is_user_archetype(base_type) and not base_type.shared.is_builtin_class {
-        return True;
-    }
-    # Skip for classes with Python base classes (they may have dynamic attributes)
-    if self._has_external_base_class(base_type) {
-        return True;
-    }
-    # Skip for Python dunders (available on all objects)
-    if attr_name.startswith('__') and attr_name.endswith('__') {
-        return True;
-    }
-    return False;
+    # Skip validation if any of these conditions is true:
+    return (
+        self.is_any_type(base_type)
+        or isinstance(base_type, types.UnknownType)
+        or (not self._is_user_archetype(base_type) and base_type.shared and not base_type.shared.is_builtin_class)
+        or self._has_external_base_class(base_type)
+    );
 }
 
 """Report appropriate error message based on class type."""
@@ -320,12 +301,8 @@ impl TypeEvaluator._report_attribute_error(
 impl TypeEvaluator._validate_self_attribute(
     base_type: types.ClassType, attr_name_node: uni.Name, attr_name: str
 ) -> None {
-    if self._lookup_object_member(base_type, attr_name) {
-        return;
+    # Only report error if attribute not found AND validation not skipped
+    if not self._lookup_object_member(base_type, attr_name) and not self._skip_validation(base_type, attr_name) {
+        self._report_attribute_error(base_type, attr_name_node, attr_name);
     }
-    # Skip validation for classes with external base classes or Python builtins
-    if self._skip_validation(base_type, attr_name) {
-        return;
-    }
-    self._report_attribute_error(base_type, attr_name_node, attr_name);
 }

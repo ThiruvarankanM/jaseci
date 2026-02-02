@@ -55,5 +55,7 @@ obj GuessGame(y) {
         self.attempts = 10;
         self.player = "John";
         self.a.b = 5;  # Error: 'a' not declared in GuessGame or Game
+        cls_name = self.__class__.__name__;  # Valid: dunders from object class
+        my_name = self.__foo__.__name__;  # Error: '__foo__' not a valid dunder attribute
     }
 }

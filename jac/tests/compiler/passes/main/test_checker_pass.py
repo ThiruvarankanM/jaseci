@@ -1335,18 +1335,16 @@ def test_undeclared_attributes(fixture_path: Callable[[str], str]) -> None:
         for e in prog.errors_had
         if "not declared with 'has'" in str(e) or "has no attribute" in str(e)
     ]
-    assert len(errors) == 7  # Now validates both reading and writing
+    assert len(errors) == 8  
 
-    # Undeclared attributes should error (both left and right side of assignments)
     for attr in [
-        "b",  # From self.b on right side
+        "b", 
         "code",
         "region",
         "missing_attr",
         "player",
-        "a",  # Added: from self.a.b = 5
+        "a",  
     ]:
         assert any(f"Attribute '{attr}' not declared" in e for e in errors)
 
-    # Verify builtin type error messages (int.res and str.res)
     assert any("has no attribute res" in e for e in errors)

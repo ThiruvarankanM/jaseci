@@ -22,7 +22,7 @@ obj ClassMember {
         skipped_undeclared_type: bool = False;
 }
 
-def compute_mro_linearization(cls: types.ClassType) -> None;
+def compute_mro_linearization(cls: types.ClassType, object_class: types.TypeBase | None = None) -> None;
 
 """
 Tracks parameter assignments for function calls.

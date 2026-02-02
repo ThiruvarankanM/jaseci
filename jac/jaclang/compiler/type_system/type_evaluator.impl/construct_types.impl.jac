@@ -193,7 +193,7 @@ impl TypeEvaluator.get_type_of_class(node_: uni.Archetype) -> types.ClassType {
         flags=types.TypeFlags.Instantiable,
     );
     # Compute the MRO for the class.
-    type_utils.compute_mro_linearization(cls_type);
+    type_utils.compute_mro_linearization(cls_type, self.prefetch.object_class);
     # Cache the type, pyright is doing invalidateTypeCacheIfCanceled()
     # we're not doing that any time sooner.
     node_.name_spec.type = cls_type;
