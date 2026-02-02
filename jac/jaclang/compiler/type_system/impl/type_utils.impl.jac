@@ -221,7 +221,9 @@ Compute the method resolution order (MRO) for a class type.
     This uses the C3 linearization algorithm to compute the MRO.
     See https://www.python.org/download/releases/2.3/mro/
 """
-impl compute_mro_linearization(cls: types.ClassType, object_class: types.TypeBase | None = None) -> None {
+impl compute_mro_linearization(
+    cls: types.ClassType, object_class: types.TypeBase | None = None
+) -> None {
     if cls.shared.mro {
         return;
     }

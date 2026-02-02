@@ -1335,15 +1335,15 @@ def test_undeclared_attributes(fixture_path: Callable[[str], str]) -> None:
         for e in prog.errors_had
         if "not declared with 'has'" in str(e) or "has no attribute" in str(e)
     ]
-    assert len(errors) == 8  
+    assert len(errors) == 8
 
     for attr in [
-        "b", 
+        "b",
         "code",
         "region",
         "missing_attr",
         "player",
-        "a",  
+        "a",
     ]:
         assert any(f"Attribute '{attr}' not declared" in e for e in errors)
 

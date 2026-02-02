@@ -267,7 +267,10 @@ impl TypeEvaluator._has_external_base_class(cls_type: types.ClassType) -> bool {
     return (
         cls_type.shared
         and cls_type.shared.base_classes
-        and any(not self._is_user_archetype(base_cls) for base_cls in cls_type.shared.base_classes)
+        and any(
+            not self._is_user_archetype(base_cls)
+            for base_cls in cls_type.shared.base_classes
+        )
     );
 }
 
@@ -277,7 +280,11 @@ impl TypeEvaluator._skip_validation(base_type: types.ClassType, attr_name: str) 
     return (
         self.is_any_type(base_type)
         or isinstance(base_type, types.UnknownType)
-        or (not self._is_user_archetype(base_type) and base_type.shared and not base_type.shared.is_builtin_class)
+        or (
+            not self._is_user_archetype(base_type)
+            and base_type.shared
+            and not base_type.shared.is_builtin_class
+        )
         or self._has_external_base_class(base_type)
     );
 }
@@ -302,7 +309,8 @@ impl TypeEvaluator._validate_self_attribute(
     base_type: types.ClassType, attr_name_node: uni.Name, attr_name: str
 ) -> None {
     # Only report error if attribute not found AND validation not skipped
-    if not self._lookup_object_member(base_type, attr_name) and not self._skip_validation(base_type, attr_name) {
+    if not self._lookup_object_member(base_type, attr_name)
+    and not self._skip_validation(base_type, attr_name) {
         self._report_attribute_error(base_type, attr_name_node, attr_name);
     }
 }
