@@ -881,7 +881,7 @@ impl TypeEvaluator._load_stub_module(path: str) -> uni.Module {
         prog=self.program,
     ).ir_out;
     SymTabBuildPass(ir_in=mod, prog=self.program);
-    self.program.mod.hub[path] = mod;
+    self.program._get_compiler().internal_program.mod.hub[path] = mod;
     return mod;
 }
 
