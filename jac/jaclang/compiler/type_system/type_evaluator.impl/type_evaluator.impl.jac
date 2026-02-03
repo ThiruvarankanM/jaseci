@@ -487,17 +487,6 @@ impl TypeEvaluator._get_type_of_symbol(symbol: uni.Symbol) -> TypeBase {
                 and node_.parent.parent
                 and isinstance(node_.parent.parent, uni.Assignment)
             ) {
-                # Only validate self.attribute assignments (not all object assignments)
-                atom_trailer = node_.parent;
-                if (
-                    atom_trailer.is_attr
-                    and self._is_self_attribute_chain(atom_trailer)
-                ) {
-                    base_type = self.get_type_of_expression(atom_trailer.target);
-                    if isinstance(base_type, types.ClassType) {
-                        self._validate_self_attribute(base_type, node_, node_.value);
-                    }
-                }
                 # Member assignment with a type annotation: obj.member: <type> = <expr>
                 if node_.parent.parent.type_tag is not None {
                     annotation_type = self.get_type_of_expression(
@@ -881,7 +870,7 @@ impl TypeEvaluator._load_stub_module(path: str) -> uni.Module {
         prog=self.program,
     ).ir_out;
     SymTabBuildPass(ir_in=mod, prog=self.program);
-    self.program._get_compiler().internal_program.mod.hub[path] = mod;
+    self.program.mod.hub[path] = mod;
     return mod;
 }
 
