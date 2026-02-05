@@ -1348,3 +1348,33 @@ def test_undeclared_attributes(fixture_path: Callable[[str], str]) -> None:
         assert any(f"Attribute '{attr}' not declared" in e for e in errors)
 
     assert any("has no attribute res" in e for e in errors)
+def test_impl_body_type_checking(fixture_path: Callable[[str], str]) -> None:
+    """Test that type errors in impl bodies."""
+    program = JacProgram()
+    path = fixture_path("checker_impl_body.jac")
+    mod = program.compile(path)
+    TypeCheckPass(ir_in=mod, prog=program)
+
+    # Expect 3 errors from the impl file (function, archetype method, enum)
+    assert len(program.errors_had) == 3, (
+        f"Expected 3 type errors, but got {len(program.errors_had)}: "
+        + "\n".join([err.pretty_print() for err in program.errors_had])
+    )
+    _assert_error_pretty_found(
+        """x = "wrong";  # <-- Error: Cannot assign str to int
+        ^^^^^^^^^^^^""",
+        program.errors_had[0].pretty_print(),
+    )
+    assert "checker_impl_body.impl.jac" in program.errors_had[0].loc.mod_path
+    _assert_error_pretty_found(
+        """result = "wrong";  # <-- Error: Cannot assign str to int
+        ^^^^^^^^^^^^^^^^^""",
+        program.errors_had[1].pretty_print(),
+    )
+    assert "checker_impl_body.impl.jac" in program.errors_had[1].loc.mod_path
+    _assert_error_pretty_found(
+        """PENDING: int = "wrong",  # <-- Error: Cannot assign str to int
+        ^^^^^^^^^^^^^^^^^^^^^^""",
+        program.errors_had[2].pretty_print(),
+    )
+    assert "checker_impl_body.impl.jac" in program.errors_had[2].loc.mod_path
