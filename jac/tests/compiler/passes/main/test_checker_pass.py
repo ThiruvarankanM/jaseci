@@ -1348,6 +1348,8 @@ def test_undeclared_attributes(fixture_path: Callable[[str], str]) -> None:
         assert any(f"Attribute '{attr}' not declared" in e for e in errors)
 
     assert any("has no attribute res" in e for e in errors)
+
+
 def test_impl_body_type_checking(fixture_path: Callable[[str], str]) -> None:
     """Test that type errors in impl bodies."""
     program = JacProgram()
