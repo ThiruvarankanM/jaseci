@@ -266,6 +266,7 @@ MICRO_JAC_FILES: list[str] = [
     "tests/compiler/passes/ecmascript/fixtures/client_jsx.jac",
     "tests/compiler/passes/ecmascript/fixtures/core_language_features.jac",
     "tests/compiler/passes/ecmascript/fixtures/export_semantics.jac",
+    "tests/compiler/passes/ecmascript/fixtures/jsx_comprehension.jac",
     "tests/compiler/passes/ecmascript/fixtures/hyphenated_imports.jac",
     "tests/compiler/passes/ecmascript/fixtures/js_gen_bug.jac",
     "tests/compiler/passes/ecmascript/fixtures/mixed_cl_default.cl.jac",
@@ -479,11 +480,19 @@ MICRO_JAC_FILES: list[str] = [
     "tests/language/fixtures/foo.jac",
     "tests/language/fixtures/hashcheck.jac",
     "tests/language/fixtures/hello.jac",
+    "tests/language/fixtures/iife_functions.jac",
     "tests/language/fixtures/lambda.jac",
+    "tests/language/fixtures/lambda_arg_annotation.jac",
+    "tests/language/fixtures/lambda_self.jac",
     "tests/language/fixtures/needs_import.jac",
     "tests/language/fixtures/simple_archs.jac",
     "tests/language/fixtures/simple_walk.jac",
     "tests/language/fixtures/visit_order.jac",
+    "tests/runtimelib/fixtures/client_app.jac",
+    "tests/runtimelib/fixtures/client_app_with_import.jac",
+    "tests/runtimelib/fixtures/client_fullstack_app.jac",
+    "tests/runtimelib/fixtures/client_ui_components.jac",
+    "tests/runtimelib/fixtures/test_reactive_signals.jac",
 ]
 
 # Fixed list of Python files in the jaclang package for py2jac testing.
