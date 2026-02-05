@@ -356,7 +356,6 @@ def test_class_construct(fixture_path: Callable[[str], str]) -> None:
     TypeCheckPass(ir_in=mod, prog=program)
     assert len(program.errors_had) == 3
 
-    # Verify that Square (class without explicit parent) has object in MRO
     square_sym = mod.sym_tab.lookup("Square")
     assert square_sym is not None
     mro_class_names = [cls.shared.class_name for cls in square_sym.decl.type.shared.mro]
