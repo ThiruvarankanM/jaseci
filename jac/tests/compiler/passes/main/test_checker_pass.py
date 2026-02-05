@@ -358,7 +358,9 @@ def test_class_construct(fixture_path: Callable[[str], str]) -> None:
 
     square_sym = mod.sym_tab.lookup("Square")
     mro_class_names = [cls.shared.class_name for cls in square_sym.decl.type.shared.mro]
-    assert "object" in mro_class_names, f"Expected 'object' in MRO, got: {mro_class_names}"
+    assert "object" in mro_class_names, (
+        f"Expected 'object' in MRO, got: {mro_class_names}"
+    )
 
     expected_errors = [
         """
