@@ -356,6 +356,10 @@ def test_class_construct(fixture_path: Callable[[str], str]) -> None:
     TypeCheckPass(ir_in=mod, prog=program)
     assert len(program.errors_had) == 3
 
+    square_sym = mod.sym_tab.lookup("Square")
+    mro_class_names = [cls.shared.class_name for cls in square_sym.decl.type.shared.mro]
+    assert "object" in mro_class_names, f"Expected 'object' in MRO, got: {mro_class_names}"
+
     expected_errors = [
         """
         Cannot assign <class float> to parameter 'color' of type <class str>
