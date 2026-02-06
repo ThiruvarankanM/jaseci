@@ -294,7 +294,7 @@ impl TypeEvaluator._skip_validation(base_type: types.ClassType, attr_name: str) 
             and not base_type.shared.is_builtin_class
         )
         or self._has_external_base_class(base_type)
-        or (unk
+        or (
             # Skip for typing module types (Callable, Optional, etc.)
             base_type.shared
             and base_type.shared.symbol_table
