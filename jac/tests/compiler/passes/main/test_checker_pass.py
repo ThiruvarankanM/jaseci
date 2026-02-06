@@ -358,7 +358,11 @@ def test_class_construct(fixture_path: Callable[[str], str]) -> None:
 
     square_sym = mod.sym_tab.lookup("Square")
     assert square_sym is not None
-    mro_class_names = [cls.shared.class_name for cls in square_sym.decl.type.shared.mro]
+    mro_class_names = [
+        cls.shared.class_name
+        for cls in square_sym.decl.type.shared.mro
+        if cls.shared is not None
+    ]
     assert "object" in mro_class_names, (
         f"Expected 'object' in MRO, got: {mro_class_names}"
     )
