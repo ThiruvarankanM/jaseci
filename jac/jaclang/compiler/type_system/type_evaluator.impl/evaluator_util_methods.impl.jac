@@ -270,11 +270,13 @@ impl TypeEvaluator._is_self_attribute_chain(atom_trailer: uni.AtomTrailer) -> bo
 
 """Check if a class has any external (non-user) base classes."""
 impl TypeEvaluator._has_external_base_class(cls_type: types.ClassType) -> bool {
+    # Exclude 'object' from this check - it's implicitly added to all classes
     return (
         cls_type.shared
         and cls_type.shared.base_classes
         and any(
             not self._is_user_archetype(base_cls)
+            and base_cls.shared.class_name != "object"
             for base_cls in cls_type.shared.base_classes
         )
     );
@@ -292,6 +294,12 @@ impl TypeEvaluator._skip_validation(base_type: types.ClassType, attr_name: str) 
             and not base_type.shared.is_builtin_class
         )
         or self._has_external_base_class(base_type)
+        or (unk
+            # Skip for typing module types (Callable, Optional, etc.)
+            base_type.shared
+            and base_type.shared.symbol_table
+            and base_type.shared.symbol_table.loc.mod_path.startswith("typing")
+        )
     );
 }
 
