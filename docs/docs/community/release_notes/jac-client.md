@@ -5,6 +5,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 ## jac-client 0.2.16 (Unreleased)
 
 - **Must Declare Attributes Before Use**: You now have to write `has attribute_name;` at the top of your class before you can use `self.attribute_name` in your methods. This catches typos early (like writing `self.mesage` instead of `self.message`) and makes your code easier to understand. Your code won't run if you forget to declare an attribute.
+- **Support custom Vite Configurations to `dev` mode**: Added support for custom Vite configuration from `jac.toml`.
 
 ## jac-client 0.2.15 (Latest Release)
 
