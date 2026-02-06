@@ -358,6 +358,8 @@ def test_class_construct(fixture_path: Callable[[str], str]) -> None:
 
     square_sym = mod.sym_tab.lookup("Square")
     assert square_sym is not None
+    assert square_sym.decl is not None
+    assert square_sym.decl.type is not None
     assert square_sym.decl.type.shared is not None
     mro_class_names = [
         cls.shared.class_name
