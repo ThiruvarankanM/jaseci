@@ -3,6 +3,7 @@
 This document provides a summary of new features, improvements, and bug fixes in each version of **Jaclang**. For details on changes that might require updates to your existing code, please refer to the [Breaking Changes](../breaking-changes.md) page.
 
 ## jaclang 0.10.1 (Unreleased)
+
 - **Internal**: Classes without a parent class now automatically inherit from `object`.
 
 ## jaclang 0.10.0 (Latest Release)
