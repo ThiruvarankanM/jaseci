@@ -4,7 +4,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## jaclang 0.10.1 (Unreleased)
 
-- **Internal**: Classes without a parent class now automatically inherit from `object`.
+- **Support Go to Definition for Inherited Members**: "Go to Definition" now works correctly for inherited methods and attributes on classes without an explicit parent class.
 
 ## jaclang 0.10.0 (Latest Release)
 
