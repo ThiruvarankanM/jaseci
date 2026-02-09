@@ -226,8 +226,13 @@ impl TypeEvaluator._validate_constructor_method(
                 self.validate_arg_types(arg_param_match);
             }
             return True;
+        } else {
+            # Method has no parameters - still validate to get specific error messages
+            if expr.params {
+                self.match_args_to_params(expr.params, expr, method_type);
+            }
+            return True;
         }
-        return False;
     }
     if isinstance(method_type, types.OverloadedType) {
         # Try each overload until one matches
