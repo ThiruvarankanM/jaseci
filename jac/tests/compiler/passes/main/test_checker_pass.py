@@ -1364,7 +1364,7 @@ def test_parameterless_init_with_args(fixture_path: Callable[[str], str]) -> Non
     path = fixture_path("checker_parameterless_init.jac")
     mod = program.compile(path)
     TypeCheckPass(ir_in=mod, prog=program)
-    
+
     assert len(program.errors_had) == 2
 
     expected_errors = [
