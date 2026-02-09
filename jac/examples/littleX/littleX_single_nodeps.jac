@@ -136,7 +136,7 @@ walker get_profile(visit_profile) {}
 
 walker load_user_profiles {
     has profiles: list;
-    
+
     can load_profiles with Root entry {
         self.profiles: list = [];
         for each_root in allroots() {
