@@ -66,8 +66,8 @@ walker update_session {
         show_summary: bool = False,
         terminate_conversation: bool = False;
 
-    can visit_session with `root entry {
-        visit [-->](`?session) else {
+    can visit_session with Root entry {
+        visit [-->](?:session) else {
             session_node = here ++> session();
             visit session_node[0];
         }
