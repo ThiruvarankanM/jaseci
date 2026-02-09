@@ -6,7 +6,7 @@ obj Name {
 obj Person {
     has name: Name;
 
-    def init {  # No parameters
+    def init {  #No parameters
         self.nickname = "NoNick";
     }
 }
