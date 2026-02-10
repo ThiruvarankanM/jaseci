@@ -120,11 +120,11 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
                 if len(overloaded_fns) > 1 {
                     overloaded_ty = types.OverloadedType(overloads=overloaded_fns);
                 }
-                
+
                 init_validated = self._validate_constructor_method(
                     expr, overloaded_ty or method_ty
                 );
-                
+
                 # Fallback for non-overloaded parameterless init with args
                 if not init_validated and expr.params {
                     self.match_args_to_params(
