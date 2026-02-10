@@ -106,12 +106,29 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
         # Fall back to __init__ if __new__ didn't have meaningful params
         if not validated {
             if init_method := self._lookup_class_member(caller_type, "__init__") {
+                # Extract overloads for __init__ (same logic as __new__)
+                method_ty = self.get_type_of_symbol(init_method.symbol);
+                overloaded_fns: list[types.FunctionType] = [method_ty];
+                for overload in init_method.overloads {
+                    overload_member_ty = self.get_type_of_symbol(overload);
+                    if isinstance(overload_member_ty, types.FunctionType) {
+                        overload_member_ty = overload_member_ty.specialize(caller_type);
+                        overloaded_fns.append(overload_member_ty);
+                    }
+                }
+                overloaded_ty: types.OverloadedType | None = None;
+                if len(overloaded_fns) > 1 {
+                    overloaded_ty = types.OverloadedType(overloads=overloaded_fns);
+                }
+                
                 init_validated = self._validate_constructor_method(
-                    expr, self.get_type_of_symbol(init_method.symbol)
+                    expr, overloaded_ty or method_ty
                 );
-                if not init_validated and expr.params and not init_method.overloads {
+                
+                # Fallback for non-overloaded parameterless init with args
+                if not init_validated and expr.params {
                     self.match_args_to_params(
-                        expr.params, expr, self.get_type_of_symbol(init_method.symbol)
+                        expr.params, expr, method_ty
                     );
                 }
             } elif caller_type.is_data_class() {
