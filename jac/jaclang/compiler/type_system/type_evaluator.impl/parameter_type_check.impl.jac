@@ -93,8 +93,9 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
             if init_method := self._lookup_class_member(caller_type, "__init__") {
                 method_ty = self._get_method_with_overloads(init_method, caller_type);
                 validated = self._validate_constructor_method(expr, method_ty);
-                # Fallback: validate args against parameterless init (skip for dataclasses)
-                if not validated and expr.params and not caller_type.is_data_class() {
+                # Fallback: validate args against parameterless init (skip if inherited from object)
+                is_from_object = init_method.class_type.shared.class_name == "object";
+                if not validated and expr.params and not is_from_object {
                     base_method_ty = self.get_type_of_symbol(init_method.symbol);
                     self.match_args_to_params(expr.params, expr, base_method_ty);
                 }
