@@ -12,7 +12,6 @@ Iterates all in-module nodes and collects those with valid semantic tokens.
 """
 impl SemTokManager.collect_resolved_nodes(ir: uni.Module) -> list {
     nodes: list = [];
-    # First pass: collect NameAtoms with valid semantic tokens.
     for nd in ir._in_mod_nodes {
         if isinstance(nd, uni.NameAtom) {
             if nd.sem_token {
@@ -20,34 +19,7 @@ impl SemTokManager.collect_resolved_nodes(ir: uni.Module) -> list {
             }
         }
     }
-    # Second pass: handle ImplDef FuncSignature type annotations.
-    for nd in ir._in_mod_nodes {
-        if isinstance(nd, uni.ImplDef) {
-            if isinstance(nd.spec, uni.FuncSignature) {
-                sig = nd.spec;
-                all_params = (
-                    list(sig.posonly_params) + list(sig.params) + (
-                        [sig.varargs] if sig.varargs else []
-                    ) + list(sig.kwonlyargs) + ([sig.kwargs] if sig.kwargs else [])
-                );
-                for param in all_params {
-                    if param.type_tag and isinstance(param.type_tag, uni.SubTag) {
-                        tag = param.type_tag.tag;
-                        if isinstance(tag, uni.NameAtom) {
-                            if tag.sem_token {
-                                nodes.append(tag);
-                            }
-                        }
-                    }
-                }
-                if sig.return_type and isinstance(sig.return_type, uni.NameAtom) {
-                    if sig.return_type.sem_token {
-                        nodes.append(sig.return_type);
-                    }
-                }
-            }
-        }
-    }
+    
     return nodes;
 }
 
