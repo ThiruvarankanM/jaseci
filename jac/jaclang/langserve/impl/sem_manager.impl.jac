@@ -19,7 +19,7 @@ impl SemTokManager.collect_resolved_nodes(ir: uni.Module) -> list {
             }
         }
     }
-    
+
     return nodes;
 }
 
