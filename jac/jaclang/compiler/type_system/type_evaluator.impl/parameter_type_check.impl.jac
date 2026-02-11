@@ -90,21 +90,22 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
         }
         # Fall back to __init__ if __new__ didn't have meaningful params
         if not validated {
-            if init_method := self._lookup_class_member(caller_type, "__init__") {
+            init_method = self._lookup_class_member(caller_type, "__init__");
+            is_from_object = init_method and init_method.class_type.shared.class_name == "object";
+            
+            # User-defined __init__: validate against explicit method
+            if init_method and not is_from_object {
                 method_ty = self._get_method_with_overloads(init_method, caller_type);
                 validated = self._validate_constructor_method(expr, method_ty);
-                # Fallback: validate args against parameterless init (skip if inherited from object)
-                is_from_object = init_method.class_type.shared.class_name == "object";
-                if not validated and expr.params and not is_from_object {
-                    base_method_ty = self.get_type_of_symbol(init_method.symbol);
-                    self.match_args_to_params(expr.params, expr, base_method_ty);
+                if not validated and expr.params {
+                    self.match_args_to_params(expr.params, expr, self.get_type_of_symbol(init_method.symbol));
                 }
             }
-            if not validated and caller_type.is_data_class() {
-                self._validate_constructor_method(
-                    expr, self._create_dataclass_init_method(caller_type)
-                );
+            
+            elif caller_type.is_data_class() {
+                self._validate_constructor_method(expr, self._create_dataclass_init_method(caller_type));
             }
+     
         }
         return caller_type.clone_as_instance();
     }
