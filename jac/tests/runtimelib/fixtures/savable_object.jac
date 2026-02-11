@@ -21,7 +21,7 @@ obj SavableObject {
 
 walker create_custom_object {
     has obj: SavableObject | None = None;
-    
+
     can enter1 with Root entry {
         self.obj = SavableObject(
             val=0,

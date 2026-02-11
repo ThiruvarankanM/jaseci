@@ -1319,6 +1319,7 @@ def test_impl_body_type_checking(fixture_path: Callable[[str], str]) -> None:
     )
     assert "checker_impl_body.impl.jac" in program.errors_had[2].loc.mod_path
 
+
 def test_undeclared_attributes(fixture_path: Callable[[str], str]) -> None:
     """Test detection of undeclared attributes with nesting and inheritance."""
     prog = JacProgram()

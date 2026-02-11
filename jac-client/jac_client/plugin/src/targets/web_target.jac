@@ -13,7 +13,7 @@ class WebTarget(ClientTarget) {
         requires_setup: bool,
         config_section: str,
         output_dir: Path;
-        
+
     def init(self: WebTarget) {
         self.name = "web";
         self.default = True;

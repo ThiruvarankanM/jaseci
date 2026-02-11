@@ -2,10 +2,10 @@
 
 import random;
 
-class Game { 
+class Game {
     has attempts: int,
         won: bool;
-   
+
     def init(self: Game, attempts: int = 10) {
         self.attempts = attempts;
         self.won = False;
@@ -18,7 +18,7 @@ class Game {
 
 class GuessTheNumberGame(Game) {
     has correct_number: int;
-    
+
     def init(self: GuessTheNumberGame, attempts: int = 10) {
         super.init(attempts);
         self.correct_number = random.randint(1, 10);
