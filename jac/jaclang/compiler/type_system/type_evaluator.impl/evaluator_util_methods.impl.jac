@@ -63,7 +63,9 @@ impl TypeEvaluator._lookup_class_member(
             if sym.decl {
                 if declaring_class := sym.decl.find_parent_of_type(uni.Archetype) {
                     declaring_class_type = self.get_type_of_class(declaring_class);
-                    return type_utils.ClassMember(sym, declaring_class_type, overloaded_syms);
+                    return type_utils.ClassMember(
+                        sym, declaring_class_type, overloaded_syms
+                    );
                 }
             }
             return type_utils.ClassMember(sym, cls, overloaded_syms);
