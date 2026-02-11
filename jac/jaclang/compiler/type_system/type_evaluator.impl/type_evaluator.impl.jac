@@ -607,6 +607,9 @@ impl TypeEvaluator.is_sub_class(
         if cls.shared == super_cls.shared {
             return True;
         }
+        if cls.shared.class_name == super_cls.shared.class_name {
+            return True;
+        }
     }
     return False;
 }
