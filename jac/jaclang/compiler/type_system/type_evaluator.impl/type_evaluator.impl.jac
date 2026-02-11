@@ -145,7 +145,6 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                         self._is_self_attribute_chain(expr)
                         and not isinstance(expr.parent, uni.FuncCall)
                         and isinstance(base_type, types.ClassType)
-                        and not isinstance(base_type, types.FunctionType)
                         and not self._skip_validation(base_type, expr.right.value)
                     ) {
                         self._validate_self_attribute(
@@ -860,13 +859,14 @@ impl TypeEvaluator._load_stub_module(path: str) -> uni.Module {
         raise FileNotFoundError(f"Stub file not found at {path}") ;
     }
     file_content = read_file_with_encoding(path);
-    internal_prog = self.program._get_compiler().internal_program;
+    uni_source = uni.Source(file_content, path);
     mod = PyastBuildPass(
-        ir_in=uni.PythonModuleAst(py_ast.parse(file_content), orig_src=uni.Source(file_content, path)),
-        prog=internal_prog
+        ir_in=uni.PythonModuleAst(py_ast.parse(file_content),
+            orig_src=uni_source,),
+        prog=self.program,
     ).ir_out;
-    SymTabBuildPass(ir_in=mod, prog=internal_prog);
-    internal_prog.mod.hub[path] = mod;
+    SymTabBuildPass(ir_in=mod, prog=self.program);
+    self.program.mod.hub[path] = mod;
     return mod;
 }
 
