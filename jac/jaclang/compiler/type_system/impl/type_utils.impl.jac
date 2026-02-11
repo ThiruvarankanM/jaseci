@@ -29,7 +29,9 @@ impl lookup_symtab(
     result = symtable.lookup(name, deep=True, incl_inner_scope=True);
     # If not found and we're in an ImplDef try on ability's declaration
     if (result is None and isinstance(symtable, uni.ImplDef) and symtable.decl_link) {
-        result = symtable.decl_link.sym_tab.lookup(name, deep=True, incl_inner_scope=True)
+        result = symtable.decl_link.sym_tab.lookup(
+            name, deep=True, incl_inner_scope=True
+        )
         if symtable.decl_link.sym_tab
         else None;
     }
