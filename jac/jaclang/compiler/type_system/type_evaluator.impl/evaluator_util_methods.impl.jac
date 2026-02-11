@@ -246,3 +246,79 @@ impl TypeEvaluator._is_symbol_property(symbol: uni.Symbol) -> bool {
     }
     return False;
 }
+
+"""Check if a ClassType represents a user-defined archetype (not builtin)."""
+impl TypeEvaluator._is_user_archetype(cls_type: types.ClassType) -> bool {
+    return (
+        isinstance(cls_type, types.ClassType)
+        and cls_type.shared
+        and isinstance(cls_type.shared.symbol_table, uni.Archetype)
+        and not cls_type.shared.symbol_table.loc.mod_path.endswith(".py")
+        and not cls_type.shared.symbol_table.loc.mod_path.endswith(".na.jac")
+        and not cls_type.shared.is_builtin_class
+    );
+}
+
+"""Check if an AtomTrailer chain starts with 'self'."""
+impl TypeEvaluator._is_self_attribute_chain(atom_trailer: uni.AtomTrailer) -> bool {
+    current = atom_trailer;
+    while isinstance(current, uni.AtomTrailer) and current.target {
+        current = current.target;
+    }
+    return isinstance(current, uni.Name) and current.value == "self";
+}
+
+"""Check if a class has any external (non-user) base classes."""
+impl TypeEvaluator._has_external_base_class(cls_type: types.ClassType) -> bool {
+    # Exclude 'object' from this check - it's implicitly added to all classes
+    return (
+        cls_type.shared
+        and cls_type.shared.base_classes
+        and any(
+            not self._is_user_archetype(base_cls)
+            and base_cls.shared.class_name != "object"
+            for base_cls in cls_type.shared.base_classes
+        )
+    );
+}
+
+"""Determine if validation should be skipped for a class type."""
+impl TypeEvaluator._skip_validation(base_type: types.ClassType, attr_name: str) -> bool {
+    # Skip validation if any of these conditions is true:
+    return (
+        self.is_any_type(base_type)
+        or isinstance(base_type, types.UnknownType)
+        or (
+            not self._is_user_archetype(base_type)
+            and base_type.shared
+            and not base_type.shared.is_builtin_class
+        )
+        or self._has_external_base_class(base_type)
+    );
+}
+
+"""Report appropriate error message based on class type."""
+impl TypeEvaluator._report_attribute_error(
+    base_type: types.ClassType, attr_name_node: uni.Name, attr_name: str
+) -> None {
+    if self._is_user_archetype(base_type) {
+        self.add_diagnostic(
+            attr_name_node, f"Attribute '{attr_name}' not declared with 'has'",
+        );
+    } else {
+        self.add_diagnostic(
+            attr_name_node, f"'{base_type}' object has no attribute '{attr_name}'",
+        );
+    }
+}
+
+"""Validate and report undeclared attribute access on self."""
+impl TypeEvaluator._validate_self_attribute(
+    base_type: types.ClassType, attr_name_node: uni.Name, attr_name: str
+) -> None {
+    # Only report error if attribute not found AND validation not skipped
+    if not self._lookup_object_member(base_type, attr_name)
+    and not self._skip_validation(base_type, attr_name) {
+        self._report_attribute_error(base_type, attr_name_node, attr_name);
+    }
+}

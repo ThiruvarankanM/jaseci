@@ -11,6 +11,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 - **Bootstrap Compiler (`jac0`)**: Added a single-file Python transpiler (`jac0.py`, ~1900 lines) that compiles the Jac subset produced by `py2jac` into equivalent Python source code. This closes the bootstrap loop.
 - **RD Parser: Broad Grammar Parity Fixes**: Fixed 16 grammar gaps in the recursive descent parser, raising walk-check match rate from 95.3% to 98.7%.
 - **`jac --version` Shows Installed Plugins**: The version banner now lists all installed Jac plugins with their versions, making it easy to see the full environment at a glance.
+- **Must Declare Attributes Before Use**: You now have to write `has attribute_name;` at the top of your class before you can use `self.attribute_name` in your methods. This catches typos early (like writing `self.mesage` instead of `self.message`) and makes your code easier to understand. Your code won't run if you forget to declare an attribute.
 
 ## jaclang 0.10.0 (Latest Release)
 

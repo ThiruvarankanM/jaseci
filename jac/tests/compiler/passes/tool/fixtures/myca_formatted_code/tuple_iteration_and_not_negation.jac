@@ -1,6 +1,8 @@
 node n {}
 
 walker test {
+    has user_level_buddy_schedule: dict;
+    
     can c with n entry {
         self.user_level_buddy_schedule = {};
         # Update any new user level buddy schedule

@@ -493,7 +493,7 @@ def test_checker_member_access(fixture_path: Callable[[str], str]) -> None:
         assert sym in str(mod.sym_tab.kid_scope[0].names_in_scope.values())
     age_sym = mod.sym_tab.kid_scope[0].lookup("age")
     assert age_sym is not None
-    assert "(NAME, age, 22:11 - 22:14)" in str(age_sym.uses)
+    assert "(NAME, age, 23:11 - 23:14)" in str(age_sym.uses)
     assert len(program.errors_had) == 1
     _assert_error_pretty_found(
         """
@@ -1318,3 +1318,27 @@ def test_impl_body_type_checking(fixture_path: Callable[[str], str]) -> None:
         program.errors_had[2].pretty_print(),
     )
     assert "checker_impl_body.impl.jac" in program.errors_had[2].loc.mod_path
+
+def test_undeclared_attributes(fixture_path: Callable[[str], str]) -> None:
+    """Test detection of undeclared attributes with nesting and inheritance."""
+    prog = JacProgram()
+    prog.compile(fixture_path("checker_attribute_validation.jac"), type_check=True)
+
+    errors = [
+        str(e)
+        for e in prog.errors_had
+        if "not declared with 'has'" in str(e) or "has no attribute" in str(e)
+    ]
+    assert len(errors) == 8
+
+    for attr in [
+        "b",
+        "code",
+        "region",
+        "missing_attr",
+        "player",
+        "a",
+    ]:
+        assert any(f"Attribute '{attr}' not declared" in e for e in errors)
+
+    assert any("has no attribute res" in e for e in errors)

@@ -303,3 +303,4 @@ semantic_analysis_pass.jac
 pyast_gen_pass.jac
 jsx_processor.jac
 base_ast_gen_pass.jac
+js_gen_bug.jac

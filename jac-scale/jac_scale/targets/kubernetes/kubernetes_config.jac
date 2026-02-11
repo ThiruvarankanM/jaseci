@@ -4,7 +4,9 @@ import from jac_scale.abstractions.config.base_config { BaseConfig }
 
 """Configuration for Kubernetes deployments."""
 class KubernetesConfig(BaseConfig) {
-    has docker_image_name: str = '',
+    has app_name: str,
+        namespace: str,
+        docker_image_name: str = '',
         docker_username: str = '',
         docker_password: str = '',
         container_port: int = 8000,

@@ -12,6 +12,10 @@ with entry {
 
 """Handles compilation of Jac files to JavaScript."""
 class JacToJSCompiler {
+    has _compile_to_js: Callable[([Path], tuple[(str, (ModuleType | None))])],
+        _extract_client_exports: Callable[([Any], list[str])],
+        _extract_client_globals: Callable[([Any, ModuleType], dict[(str, Any)])];
+        
     def init(
         self: JacToJSCompiler,
         compile_to_js_func: Callable[([Path], tuple[(str, (ModuleType | None))])],

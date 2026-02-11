@@ -148,6 +148,8 @@ walker update_profile(visit_profile) {
 walker get_profile(visit_profile) {}
 
 walker load_user_profiles {
+    has profiles: list;
+    
     obj __specs__ {
         static has auth: bool = False;
     }

@@ -8,6 +8,12 @@ import from jac_client.plugin.src.targets.registry { ClientTarget }
 
 """Web build target."""
 class WebTarget(ClientTarget) {
+    has name: str,
+        default: bool,
+        requires_setup: bool,
+        config_section: str,
+        output_dir: Path;
+        
     def init(self: WebTarget) {
         self.name = "web";
         self.default = True;

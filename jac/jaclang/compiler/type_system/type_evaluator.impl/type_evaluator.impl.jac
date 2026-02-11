@@ -140,6 +140,17 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                         expr.right.type = overloaded_ty or member_ty;
                         return expr.right.type;
                     }
+                    # Member not found - validate if it's part of a self.* chain (but not a method call)
+                    if (
+                        self._is_self_attribute_chain(expr)
+                        and not isinstance(expr.parent, uni.FuncCall)
+                        and isinstance(base_type, types.ClassType)
+                        and not self._skip_validation(base_type, expr.right.value)
+                    ) {
+                        self._validate_self_attribute(
+                            base_type, expr.right, expr.right.value
+                        );
+                    }
                     return types.UnknownType();
                 }
             } elif expr.is_null_ok {

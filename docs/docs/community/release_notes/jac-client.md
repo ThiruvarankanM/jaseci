@@ -12,6 +12,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 - Updated all-in-one example `jac.toml` to include `[plugins.scale.secrets]` test config.
 - **Improved API Error Handling**: Walker and function API calls now check `response.ok` and throw descriptive exceptions on HTTP errors. The `Authorization` header is only sent when a token is present, avoiding empty `Bearer` headers.
 - **Better Error Diagnostics**: Silent `except Exception {}` blocks in `jacLogin` and `__jacCallFunction` now log warnings via `console.warn` for easier debugging.
+- **Must Declare Attributes Before Use**: You now have to write `has attribute_name;` at the top of your class before you can use `self.attribute_name` in your methods. This catches typos early (like writing `self.mesage` instead of `self.message`) and makes your code easier to understand. Your code won't run if you forget to declare an attribute.
 
 ## jac-client 0.2.16 (Latest Release)
 
