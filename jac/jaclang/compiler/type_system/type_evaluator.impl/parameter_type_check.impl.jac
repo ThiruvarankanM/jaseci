@@ -98,7 +98,8 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
                     base_method_ty = self.get_type_of_symbol(init_method.symbol);
                     self.match_args_to_params(expr.params, expr, base_method_ty);
                 }
-            } elif caller_type.is_data_class() {
+            }
+            if not validated and caller_type.is_data_class() {
                 self._validate_constructor_method(
                     expr, self._create_dataclass_init_method(caller_type)
                 );
