@@ -6,6 +6,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 - Various refactors
 - **Must Declare Attributes Before Use**: You now have to write `has attribute_name;` at the top of your class before you can use `self.attribute_name` in your methods. This catches typos early (like writing `self.mesage` instead of `self.message`) and makes your code easier to understand. Your code won't run if you forget to declare an attribute.
+- **Fix: `api_key` parameter no longer silently ignored**: The `api_key` passed via constructor, instance config, or global config (`jac.toml`) was being overwritten with `None` before every LLM call. The key is now properly resolved with a clear priority chain (constructor > instance config > global config > environment variables) and passed to LiteLLM, OpenAI client, and HTTP calls. API keys are also masked in verbose logs, showing only the last 4 characters.
 
 ## byllm 0.4.18 (Latest Release)
 
