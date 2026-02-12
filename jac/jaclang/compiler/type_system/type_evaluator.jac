@@ -154,7 +154,6 @@ obj TypeEvaluator {
     def _is_user_archetype(cls_type: types.ClassType) -> bool;
     def _has_external_base_class(cls_type: types.ClassType) -> bool;
     def _skip_validation(base_type: types.ClassType) -> bool;
-
     # This function is a combination of the bellow pyright functions.
     #  - getDeclaredTypeOfSymbol
     #  - getTypeForDeclaration
