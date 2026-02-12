@@ -143,7 +143,8 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                     # Member not found - validate self.* attribute chains (not method calls)
                     chain = expr.as_attr_list;
                     if (
-                        len(chain) > 0 and chain[0].sym_name == "self"
+                        len(chain) > 0
+                        and chain[0].sym_name == "self"
                         and not isinstance(expr.parent, uni.FuncCall)
                         and isinstance(base_type, types.ClassType)
                         and not self._skip_validation(base_type)
