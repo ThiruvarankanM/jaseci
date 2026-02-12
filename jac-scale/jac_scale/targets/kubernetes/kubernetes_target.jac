@@ -37,7 +37,7 @@ class KubernetesTarget(DeploymentTarget) {
     has k8s_config: KubernetesConfig,
         secrets: dict[str, str] = {},
         config: KubernetesConfig,
-        env_list:list,
+        env_list: list,
         logger: (Logger | None) = None;
 
     def init(

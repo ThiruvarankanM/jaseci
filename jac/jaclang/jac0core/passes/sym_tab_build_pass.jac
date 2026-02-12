@@ -332,7 +332,6 @@ class SymTabBuildPass(UniPass) {
                 declared_attrs = {
                     has_var.name.value for has_var in archetype.get_has_vars()
                 };
-
                 if attr_name in declared_attrs {
                     archetype.sym_tab.def_insert(chain[1], access_spec=archetype);
                 }
