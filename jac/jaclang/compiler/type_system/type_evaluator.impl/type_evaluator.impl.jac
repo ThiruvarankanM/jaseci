@@ -191,6 +191,7 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                                 f"'{base_type}' object has no attribute '{expr.right.value}'",
                             );
                         }
+                    }
                     # Fallback for implicit init method on data classes (classes with 'has' vars).
                     # When accessing .init on an instance and no explicit init is found,
                     # create an implicit init from the 'has' variables.

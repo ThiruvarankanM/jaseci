@@ -2,6 +2,9 @@
 
 # Level 1: Base class with explicit init
 obj Animal {
+    has name: str;
+    has age: int;
+
     def init(name: str, age: int) {
         self.name = name;
         self.age = age;
@@ -10,6 +13,8 @@ obj Animal {
 
 # Level 2: Dog extends Animal
 obj Dog(Animal) {
+    has breed: str;
+
     def init(name: str, age: int, breed: str) {
         super.init(name, age);
         self.breed = breed;
@@ -18,6 +23,8 @@ obj Dog(Animal) {
 
 # Level 3: TrainedDog extends Dog
 obj TrainedDog(Dog) {
+    has skill: str;
+
     def init(name: str, age: int, breed: str, skill: str) {
         super.init(name, age, breed);
         self.skill = skill;
@@ -26,6 +33,8 @@ obj TrainedDog(Dog) {
 
 # Level 4: ServiceDog extends TrainedDog
 obj ServiceDog(TrainedDog) {
+    has owner: str;
+
     def init(name: str, age: int, breed: str, skill: str, owner: str) {
         super.init(name, age, breed, skill);
         self.owner = owner;
@@ -34,6 +43,8 @@ obj ServiceDog(TrainedDog) {
 
 # Level 5: GuideDog extends ServiceDog
 obj GuideDog(ServiceDog) {
+    has certified: bool;
+
     def init(name: str, age: int, breed: str, owner: str, certified: bool) {
         super.init(name, age, breed, "guiding", owner);
         self.certified = certified;
