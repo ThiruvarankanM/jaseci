@@ -1332,7 +1332,8 @@ def test_impl_body_type_checking(fixture_path: Callable[[str], str]) -> None:
         program.errors_had[2].pretty_print(),
     )
     assert "checker_impl_body.impl.jac" in program.errors_had[2].loc.mod_path
-    
+
+
 def test_super_init_with_has_vars(fixture_path: Callable[[str], str]) -> None:
     """Test super.init() type checking with has variables (implicit dataclass init)."""
     program = JacProgram()
@@ -1401,7 +1402,8 @@ def test_super_init_with_explicit_init(fixture_path: Callable[[str], str]) -> No
         """Cannot assign <class int> to parameter 'owner' of type <class str>""",
         program.errors_had[3].pretty_print(),
     )
-    
+
+
 def test_nested_functions_in_impl_blocks(fixture_path: Callable[[str], str]) -> None:
     """Test that nested functions in impl blocks have correct return type checking."""
     program = JacProgram()
