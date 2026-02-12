@@ -14,6 +14,8 @@ This document provides a summary of new features, improvements, and bug fixes in
 - **Native Kubernetes Secret support**: New `[plugins.scale.secrets]` config section. Declare secrets with `${ENV_VAR}` syntax, auto-resolved at deploy time into a K8s Secret with `envFrom.secretRef`.
 - **Minor Internal Refactor in Tests**: Minor internal refactoring in test_direct.py to improve test structure
 - **Must Declare Attributes Before Use**: You now have to write `has attribute_name;` at the top of your class before you can use `self.attribute_name` in your methods. This catches typos early (like writing `self.mesage` instead of `self.message`) and makes your code easier to understand. Your code won't run if you forget to declare an attribute.
+- **fix**: Return 401 instead of 500 for deleted users with valid JWT tokens.
+- **1 Small Refactors**
 
 ## jac-scale 0.1.7 (Latest Release)
 
