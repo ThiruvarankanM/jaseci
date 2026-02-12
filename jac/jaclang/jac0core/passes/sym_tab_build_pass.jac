@@ -327,7 +327,15 @@ class SymTabBuildPass(UniPass) {
         if (ability and ability.method_owner) {
             archetype = ability.method_owner;
             if isinstance(archetype, uni.Archetype) {
-                archetype.sym_tab.def_insert(chain[1], access_spec=archetype);
+                # Only register attributes that are explicitly declared with 'has'
+                attr_name = chain[1].sym_name;
+                declared_attrs = {
+                    has_var.name.value for has_var in archetype.get_has_vars()
+                };
+
+                if attr_name in declared_attrs {
+                    archetype.sym_tab.def_insert(chain[1], access_spec=archetype);
+                }
             }
         }
     }
