@@ -1332,3 +1332,17 @@ def test_impl_body_type_checking(fixture_path: Callable[[str], str]) -> None:
         program.errors_had[2].pretty_print(),
     )
     assert "checker_impl_body.impl.jac" in program.errors_had[2].loc.mod_path
+
+
+def test_nested_functions_in_impl_blocks(fixture_path: Callable[[str], str]) -> None:
+    """Test that nested functions in impl blocks have correct return type checking."""
+    program = JacProgram()
+    path = fixture_path("check_nested_impldef.jac")
+    mod = program.compile(path)
+    TypeCheckPass(ir_in=mod, prog=program)
+
+    # Should have NO errors - all nested functions return correct types
+    assert len(program.errors_had) == 0, (
+        f"Expected no type checking errors, but got {len(program.errors_had)}: "
+        + "\n".join([err.pretty_print() for err in program.errors_had])
+    )
