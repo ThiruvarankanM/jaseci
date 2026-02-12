@@ -140,16 +140,25 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                         expr.right.type = overloaded_ty or member_ty;
                         return expr.right.type;
                     }
-                    # Member not found - validate if it's part of a self.* chain (but not a method call)
+                    # Member not found - validate self.* attribute chains (not method calls)
+                    chain = expr.as_attr_list;
                     if (
-                        self._is_self_attribute_chain(expr)
+                        len(chain) > 0 and chain[0].sym_name == "self"
                         and not isinstance(expr.parent, uni.FuncCall)
                         and isinstance(base_type, types.ClassType)
-                        and not self._skip_validation(base_type, expr.right.value)
+                        and not self._skip_validation(base_type)
                     ) {
-                        self._validate_self_attribute(
-                            base_type, expr.right, expr.right.value
-                        );
+                        if self._is_user_archetype(base_type) {
+                            self.add_diagnostic(
+                                expr.right,
+                                f"Attribute '{expr.right.value}' not declared with 'has'",
+                            );
+                        } else {
+                            self.add_diagnostic(
+                                expr.right,
+                                f"'{base_type}' object has no attribute '{expr.right.value}'",
+                            );
+                        }
                     }
                     return types.UnknownType();
                 }
