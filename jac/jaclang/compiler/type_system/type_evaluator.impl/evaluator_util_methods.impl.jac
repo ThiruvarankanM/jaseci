@@ -280,7 +280,9 @@ impl TypeEvaluator._has_external_base_class(cls_type: types.ClassType) -> bool {
         cls_type.shared
         and cls_type.shared.base_classes
         and any(
-            not self._is_user_archetype(base_cls)
+            isinstance(base_cls, types.ClassType)
+            and not self._is_user_archetype(base_cls)
+            and base_cls.shared
             and base_cls.shared.class_name != "object"
             for base_cls in cls_type.shared.base_classes
         )

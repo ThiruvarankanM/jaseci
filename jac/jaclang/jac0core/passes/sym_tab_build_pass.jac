@@ -327,12 +327,12 @@ class SymTabBuildPass(UniPass) {
         if (ability and ability.method_owner) {
             archetype = ability.method_owner;
             if isinstance(archetype, uni.Archetype) {
-                # Only register attributes that are explicitly declared with 'has'
-                attr_name = chain[1].sym_name;
-                declared_attrs = {
-                    has_var.name.value for has_var in archetype.get_has_vars()
-                };
-                if attr_name in declared_attrs {
+                # For 'class' keyword (Python interop), register all self.attr assignments.
+                # For obj/node/walker/edge, only register has-declared attributes.
+                if (
+                    archetype.arch_type.name == Tokens.KW_CLASS
+                    or any(hv.name.value == chain[1].sym_name for hv in archetype.get_has_vars())
+                ) {
                     archetype.sym_tab.def_insert(chain[1], access_spec=archetype);
                 }
             }
