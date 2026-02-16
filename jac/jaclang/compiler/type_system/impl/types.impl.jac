@@ -366,6 +366,7 @@ impl EnumMemberType.get_value_type -> TypeBase {
     return self.member_info.value_type
     or self.enum_class.shared.enum_value_type
     or UnknownType();
+}
 
 # --- FunctionType Callable support methods ---
 """
