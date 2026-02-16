@@ -1415,11 +1415,11 @@ def test_parameterless_init_with_args(fixture_path: Callable[[str], str]) -> Non
 
     expected_errors = [
         """
-        a = Person(name=Name(first_name="Bob", last_name="Brown"));  # Error: named arg to parameterless init
-                   ^^^^
+        glob a = Person(name=Name(first_name="Bob", last_name="Brown")),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         """,
         """
-        b = Person('Jac');  # Error: positional arg to parameterless init
+        b = Person('Jac'),
                    ^^^^^
         """,
     ]
