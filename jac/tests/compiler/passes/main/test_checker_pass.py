@@ -1405,12 +1405,7 @@ def test_super_init_with_explicit_init(fixture_path: Callable[[str], str]) -> No
 
 
 def test_enum_type_checking(fixture_path: Callable[[str], str]) -> None:
-    """Test enum type checking.
-
-    - Member access, .name (str), .value (int/str)
-    - Auto-values, inheritance (BaseEnum -> IntEnum), IntFlag
-    - Enum with impl block, function parameters
-    """
+    """Test enum type checking."""
     program = JacProgram()
     mod = program.compile(fixture_path("checker_enum.jac"))
     TypeCheckPass(ir_in=mod, prog=program)
