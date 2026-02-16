@@ -92,9 +92,7 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
                 if not validated and expr.params {
                     init_sym_type = self.get_type_of_symbol(init_method.symbol);
                     if isinstance(init_sym_type, types.FunctionType) {
-                        self.match_args_to_params(
-                            expr.params, expr, init_sym_type
-                        );
+                        self.match_args_to_params(expr.params, expr, init_sym_type);
                     }
                 }
             } elif caller_type.is_data_class() {
