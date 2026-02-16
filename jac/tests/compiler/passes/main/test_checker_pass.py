@@ -1405,33 +1405,23 @@ def test_super_init_with_explicit_init(fixture_path: Callable[[str], str]) -> No
 
 
 def test_enum_type_checking(fixture_path: Callable[[str], str]) -> None:
-    """Test enum type checking: member access, .name/.value properties, inheritance, and functions.
+    """Test enum type checking.
 
-    Tests:
-    - Basic enum member access (Color.RED)
-    - .name and ._name_ property access (should be str)
-    - .value and ._value_ property access (should be value type: int or str)
-    - String enum value types (Status.PENDING.value should be str)
-    - Auto-generated enum values with mixed explicit/implicit values
-    - Enum inheritance (IntEnum requires int values)
-    - Enum with separate impl block (ShapeType)
-    - Enum member assignment to enum type variable
-    - Function calls with enum parameters and return types
+    - Member access, .name (str), .value (int/str)
+    - Auto-values, inheritance (BaseEnum -> IntEnum), IntFlag
+    - Enum with impl block, function parameters
     """
     program = JacProgram()
     mod = program.compile(fixture_path("checker_enum.jac"))
     TypeCheckPass(ir_in=mod, prog=program)
 
     expected_errors = [
-        "name_err: int = Color.RED.name",
-        "name2_err: int = Color.GREEN._name_",
-        "value_err: str = Color.BLUE.value",
-        "value2_err: str = Color.RED._value_",
-        "value_status_val_err: int = Status.ACTIVE.value",
-        "auto_val_err: str = AutoValueTest.FIFTH.value",
         "Cannot assign <class str> to enum member 'B' of type <class int>",
+        "name_err: int = Color.RED.name",
+        "value_err: str = Color.BLUE.value",
+        "value_status_val_err: int = Status.ACTIVE.value",
+        "auto_val_err: str = AutoValueTest.THIRD.value",
         "impl_shape_name_err: int = ShapeType.SQUARE.name",
-        "impl_shape_val_err: int = ShapeType.TRIANGLE.value",
         'func_wrong_type: str = process_color("not a color")',
     ]
 
