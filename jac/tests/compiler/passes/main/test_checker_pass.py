@@ -1404,6 +1404,30 @@ def test_super_init_with_explicit_init(fixture_path: Callable[[str], str]) -> No
     )
 
 
+def test_parameterless_init_with_args(fixture_path: Callable[[str], str]) -> None:
+    """Test that passing arguments to parameterless init produces errors."""
+    program = JacProgram()
+    path = fixture_path("checker_parameterless_init.jac")
+    mod = program.compile(path)
+    TypeCheckPass(ir_in=mod, prog=program)
+
+    assert len(program.errors_had) == 2
+
+    expected_errors = [
+        """
+        a = Person(name=Name(first_name="Bob", last_name="Brown"));  # Error: named arg to parameterless init
+                   ^^^^
+        """,
+        """
+        b = Person('Jac');  # Error: positional arg to parameterless init
+                   ^^^^^
+        """,
+    ]
+
+    for i, expected in enumerate(expected_errors):
+        _assert_error_pretty_found(expected, program.errors_had[i].pretty_print())
+
+
 def test_nested_functions_in_impl_blocks(fixture_path: Callable[[str], str]) -> None:
     """Test that nested functions in impl blocks have correct return type checking."""
     program = JacProgram()

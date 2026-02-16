@@ -161,6 +161,10 @@ obj TypeEvaluator {
         class_type: types.ClassType
     ) -> types.FunctionType;
 
+    def _get_method_with_overloads(
+        method_member: Any, caller_type: types.ClassType
+    ) -> TypeBase;
+
     def _validate_constructor_method(expr: uni.FuncCall, method_type: TypeBase) -> bool;
     def get_narrowed_type(symbol: uni.Symbol, at_node: uni.UniNode) -> TypeBase | None;
     def _compute_narrowed_at(

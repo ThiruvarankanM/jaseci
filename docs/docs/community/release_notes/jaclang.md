@@ -5,6 +5,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 ## jaclang 0.10.3 (Unreleased)
 
 - **Fix: Display detailed syntax error messages**: Display detailed syntax error messages in `jac run` and `jac start` commands instead of generic import errors.
+- **Fix: Type Check Parameterless Init Calls**: Passing arguments to parameterless `init` methods now shows an error with `jac check`.
 
 ## jaclang 0.10.2 (Latest Release)
 
