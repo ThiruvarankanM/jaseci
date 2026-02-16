@@ -215,12 +215,12 @@ impl TypeEvaluator.get_type_of_class(node_: uni.Archetype) -> types.ClassType {
 """Build the type for an enum class."""
 impl TypeEvaluator.get_type_of_enum(node_: uni.Enum) -> types.ClassType {
     import from jaclang.compiler.type_system { enum_utils }
-    
+
     # Return cached type if available
     if node_.name_spec.type is not None {
         return cast(types.ClassType, node_.name_spec.type);
     }
-    
+
     # Collect base classes (Example: enum Color(IntEnum) → base_classes = [IntEnum])
     base_classes: list[types.TypeBase] = [];
     for base_class in node_.base_classes or [] {
@@ -231,15 +231,15 @@ impl TypeEvaluator.get_type_of_enum(node_: uni.Enum) -> types.ClassType {
     if not base_classes and self.prefetch and self.prefetch.enum_class {
         base_classes.append(self.prefetch.enum_class);
     }
-    
+
     # Build member dictionary (RED=1, GREEN=2, etc.)
     enum_members = enum_utils.build_enum_members(node_, self);
-    
+
     # Get required value type for special enums (IntEnum → int, StrEnum → str, IntFlag → int)
     enum_value_type = enum_utils.get_special_enum_value_type_from_bases(
         base_classes, self.prefetch
     );
-    
+
     # Validate member values match required type
     if enum_value_type {
         for member in enum_members.values() {
@@ -251,7 +251,7 @@ impl TypeEvaluator.get_type_of_enum(node_: uni.Enum) -> types.ClassType {
             }
         }
     }
-    
+
     cls_type = types.ClassType(
         shared=types.ClassType.ClassDetailsShared(
             class_name=node_.name_spec.sym_name,
@@ -267,10 +267,10 @@ impl TypeEvaluator.get_type_of_enum(node_: uni.Enum) -> types.ClassType {
         private=None,
         flags=types.TypeFlags.Instantiable,
     );
-    
+
     type_utils.compute_mro_linearization(cls_type);
-    
-    # Store in node for reuse 
+
+    # Store in node for reuse
     node_.name_spec.type = cls_type;
     return cls_type;
 }

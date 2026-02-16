@@ -85,7 +85,7 @@ with entry {
 with entry {
     name_ok: str = Color.RED.name;
     name_err: int = Color.RED.name;  # Error: str assigned to int
-    
+
     name2_ok: str = Color.GREEN._name_;
     name2_err: int = Color.GREEN._name_;  # Error: str assigned to int
 }
@@ -98,12 +98,12 @@ with entry {
     # Int value enums
     value_ok: int = Color.BLUE.value;
     value_err: str = Color.BLUE.value;  # Error: int assigned to str
-    
+
     value2_ok: int = Color.RED._value_;
     value2_err: str = Color.RED._value_;  # Error: int assigned to str
-    
+
     value_dir_val: int = Direction.NORTH.value;
-    
+
     # String value enums
     value_status_val: str = Status.PENDING.value;
     value_status_val_err: int = Status.ACTIVE.value;  # Error: str assigned to int
@@ -116,11 +116,11 @@ with entry {
 with entry {
     auto_first: AutoValueTest = AutoValueTest.FIRST;
     auto_first_val: int = auto_first.value;
-    
+
     auto_third_val: int = AutoValueTest.THIRD.value;
     auto_fourth_val: int = AutoValueTest.FOURTH.value;
     auto_seventh_val: int = AutoValueTest.SEVENTH.value;
-    
+
     auto_val_err: str = AutoValueTest.FIFTH.value;  # Error: int assigned to str
 }
 
@@ -132,7 +132,7 @@ with entry {
     inherit_derived: DerivedEnum = DerivedEnum.A;
     inherit_derived_val: int = inherit_derived.value;
     inherit_derived_val_err: str = DerivedEnum.B.value;
-    
+
     inherit_base: BaseEnum = BaseEnum.BASE;
     inherit_base_val: int = inherit_base.value;
 }
@@ -164,10 +164,10 @@ with entry {
 
 with entry {
     impl_s: ShapeType = ShapeType.CIRCLE;
-    
+
     impl_shape_name: str = ShapeType.SQUARE.name;
     impl_shape_name_err: int = ShapeType.SQUARE.name;  # Error: str assigned to int
-    
+
     impl_shape_val: str = ShapeType.TRIANGLE.value;
     impl_shape_val_err: int = ShapeType.TRIANGLE.value;  # Error: str assigned to int
 }

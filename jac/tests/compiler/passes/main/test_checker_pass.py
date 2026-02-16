@@ -1406,7 +1406,7 @@ def test_super_init_with_explicit_init(fixture_path: Callable[[str], str]) -> No
 
 def test_enum_type_checking(fixture_path: Callable[[str], str]) -> None:
     """Test enum type checking: member access, .name/.value properties, inheritance, and functions.
-    
+
     Tests:
     - Basic enum member access (Color.RED)
     - .name and ._name_ property access (should be str)
@@ -1441,7 +1441,9 @@ def test_enum_type_checking(fixture_path: Callable[[str], str]) -> None:
     )
 
     for i, expected_pattern in enumerate(expected_errors):
-        _assert_error_pretty_found(expected_pattern, program.errors_had[i].pretty_print())
+        _assert_error_pretty_found(
+            expected_pattern, program.errors_had[i].pretty_print()
+        )
 
 
 def test_nested_functions_in_impl_blocks(fixture_path: Callable[[str], str]) -> None:

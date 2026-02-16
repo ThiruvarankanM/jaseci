@@ -36,7 +36,7 @@ impl create_enum_member_info(
     ) {
         return None;
     }
-    
+
     # Extract value type and literal from assignment (e.g., RED = 1, PENDING = "pending")
     value_type: types.TypeBase | None = None;
     literal_value: int | str | None = None;
@@ -122,9 +122,9 @@ impl get_special_enum_value_type_from_bases(
     }
     # Map special enum types to their required value types
     enum_type_map = {
-        "IntEnum": prefetch.int_class,   
-        "IntFlag": prefetch.int_class,   
-        "StrEnum": prefetch.str_class    
+        "IntEnum": prefetch.int_class,
+        "IntFlag": prefetch.int_class,
+        "StrEnum": prefetch.str_class
     };
     # Walk MRO chain to find if any base is IntEnum, StrEnum, or IntFlag
     # Example: enum Foo(IntEnum) → finds IntEnum in MRO → returns int type
