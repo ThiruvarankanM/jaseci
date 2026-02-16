@@ -90,9 +90,12 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
                 method_ty = self._get_method_with_overloads(init_method, caller_type);
                 validated = self._validate_constructor_method(expr, method_ty);
                 if not validated and expr.params {
-                    self.match_args_to_params(
-                        expr.params, expr, self.get_type_of_symbol(init_method.symbol)
-                    );
+                    init_sym_type = self.get_type_of_symbol(init_method.symbol);
+                    if isinstance(init_sym_type, types.FunctionType) {
+                        self.match_args_to_params(
+                            expr.params, expr, init_sym_type
+                        );
+                    }
                 }
             } elif caller_type.is_data_class() {
                 self._validate_constructor_method(
