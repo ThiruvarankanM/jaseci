@@ -36,7 +36,6 @@ impl create_enum_member_info(
     ) {
         return None;
     }
-
     # Extract value type and literal from assignment (e.g., RED = 1, PENDING = "pending")
     value_type: types.TypeBase | None = None;
     literal_value: int | str | None = None;
@@ -47,7 +46,7 @@ impl create_enum_member_info(
         } elif isinstance(val, uni.String) {
             value_type = evaluator.prefetch.str_class if evaluator.prefetch else None;
             literal_value = val.value;
-        # Complex expression: evaluate type
+            # Complex expression: evaluate type
         } else {
             value_type = evaluator.get_type_of_expression(val);
         }
@@ -66,14 +65,14 @@ impl build_enum_members(
     if not enum_node.body {
         return members;
     }
-
     # Case 1: enum Color { RED=1 }  (body is direct)
     # Case 2: enum Color; impl Color { RED=1 }  (body wrapped in ImplDef)
-    body = enum_node.body.body if isinstance(enum_node.body, uni.ImplDef) else enum_node.body;
+    body = enum_node.body.body
+    if isinstance(enum_node.body, uni.ImplDef)
+    else enum_node.body;
     if not isinstance(body, Sequence) {
         return members;
     }
-
     # If member has no value, assign next auto-increment number
     int_type = evaluator.prefetch.int_class if evaluator.prefetch else None;
     auto_value = 1;
@@ -90,9 +89,10 @@ impl build_enum_members(
                 # Next member should get current value + 1
                 # Example: FIRST=1, SECOND=2, THIRD=10, FOURTH → FOURTH gets 11 (not 3)
                 auto_value = member_info.literal_value + 1
-                    if isinstance(member_info.literal_value, int) else auto_value;
+                if isinstance(member_info.literal_value, int)
+                else auto_value;
             }
-        # Case 2: Name-only member (RED, GREEN) - gets auto-incremented int value
+            # Case 2: Name-only member (RED, GREEN) - gets auto-incremented int value
         } elif (
             isinstance(stmt, uni.NameAtom)
             and stmt.is_enum_stmt
@@ -129,10 +129,13 @@ impl get_special_enum_value_type_from_bases(
     # Walk MRO chain to find if any base is IntEnum, StrEnum, or IntFlag
     # Example: enum Foo(IntEnum) → finds IntEnum in MRO → returns int type
     return next(
-        (enum_type_map[mro_cls.shared.class_name]
-         for base in base_classes if isinstance(base, types.ClassType)
-         for mro_cls in base.shared.mro
-         if mro_cls.shared.class_name in enum_type_map),
+        (
+            enum_type_map[mro_cls.shared.class_name]
+            for base in base_classes
+            if isinstance(base, types.ClassType)
+            for mro_cls in base.shared.mro
+            if mro_cls.shared.class_name in enum_type_map
+        ),
         None
     );
 }

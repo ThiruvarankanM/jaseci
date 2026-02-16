@@ -318,6 +318,6 @@ impl EnumMemberType.get_name_as_str -> str {
 """Get value type: check member's explicit type first, then enum's inherited type requirement."""
 impl EnumMemberType.get_value_type -> TypeBase {
     return self.member_info.value_type
-        or self.enum_class.shared.enum_value_type
-        or UnknownType();
+    or self.enum_class.shared.enum_value_type
+    or UnknownType();
 }

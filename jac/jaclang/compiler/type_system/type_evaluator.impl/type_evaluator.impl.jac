@@ -67,7 +67,9 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                                 base_type.shared.enum_members
                                 and member_name in base_type.shared.enum_members
                             ) {
-                                member_info = base_type.shared.enum_members[member_name];
+                                member_info = base_type.shared.enum_members[
+                                    member_name
+                                ];
                                 return types.EnumMemberType(
                                     enum_class=base_type,
                                     member_info=member_info,
@@ -179,7 +181,6 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                     # Handle member access on enum member instances (e.g., Color.RED.name, Color.RED.value)
                     member_name = expr.right.value;
                     enum_cls = base_type.enum_class;
-
                     # Access to .name or ._name_ returns string
                     if member_name in ('name', '_name_') {
                         return self._convert_to_instance(self.prefetch.str_class);
@@ -188,7 +189,6 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                     if member_name in ('value', '_value_') {
                         return self._convert_to_instance(base_type.get_value_type());
                     }
-
                     # Access to another enum member (e.g., Color.RED.BLUE)
                     if (
                         enum_cls.shared.enum_members
