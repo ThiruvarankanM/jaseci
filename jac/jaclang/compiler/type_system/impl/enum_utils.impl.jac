@@ -1,7 +1,7 @@
 """
 Implementations for enum type checking utilities.
 """
-import from typing { TYPE_CHECKING, Sequence }
+import from typing { TYPE_CHECKING }
 import jaclang.jac0core.unitree as uni;
 import from jaclang.compiler.type_system { types }
 
@@ -65,27 +65,17 @@ impl build_enum_members(
     if not enum_node.body {
         return members;
     }
-    # Case 1: enum Color { RED=1 }  (body is direct)
-    # Case 2: enum Color; impl Color { RED=1 }  (body wrapped in ImplDef)
-    body = enum_node.body.body
-    if isinstance(enum_node.body, uni.ImplDef)
-    else enum_node.body;
-    if not isinstance(body, Sequence) {
-        return members;
-    }
     # If member has no value, assign next auto-increment number
     int_type = evaluator.prefetch.int_class if evaluator.prefetch else None;
     auto_value = 1;
-    # Collect all statements to process, flattening ModuleCode blocks
-    # (class-based enums nest assignments inside `with entry { }` blocks)
-    all_stmts: list = [];
-    for stmt in body {
-        if isinstance(stmt, uni.ModuleCode) and stmt.body {
-            all_stmts.extend(stmt.body);
-        } else {
-            all_stmts.append(stmt);
-        }
-    }
+    
+    # Use symbol table to collect member declarations
+    # Handles native enums, impl-based enums (enum Color; impl Color { RED=1 }), and class-based enums (e.g., StrEnum with `with entry {}`)
+    all_stmts: list = [
+        sym.decl.parent if isinstance(sym.decl.parent, uni.Assignment) else sym.decl
+        for (name, sym) in enum_node.names_in_scope.items()
+        if not is_excluded_enum_member_name(name)
+    ];
     for stmt in all_stmts {
         # Case 1: Assignment with explicit value (RED = 1)
         if isinstance(stmt, uni.Assignment) {

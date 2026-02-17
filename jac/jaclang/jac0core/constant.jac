@@ -362,10 +362,6 @@ class Tokens(StrEnum) {
         CONV = 'CONV';
         F_FORMAT_TEXT = 'F_FORMAT_TEXT';
     }
-
-    def __str__(self: Tokens) -> str {
-        return self.value;
-    }
 }
 
 """Token name to string value mapping."""

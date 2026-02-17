@@ -1066,17 +1066,23 @@ impl TypeEvaluator.assign_type(src_type: TypeBase, dest_type: TypeBase) -> bool 
     }
     # Enum member assignment compatibility
     if isinstance(src_type, types.EnumMemberType) {
-        # Enum member can assign to its enum class (Color.RED -> Color)
+        # Enum member can assign to its enum class (Color.RED -> Color ) -> a: Color = Color.RED   
         if isinstance(dest_type, types.ClassType) and dest_type.is_enum_class() {
             if src_type.enum_class.shared == dest_type.shared {
                 return True;
             }
         }
-        # Enum members of same enum can assign to each other (Color.RED -> Color.BLUE)
+        # Enum members of same enum can assign to each other (Color.RED -> Color.BLUE) -> a: Color.BLUE = Color.RED  
         if isinstance(dest_type, types.EnumMemberType) {
             if src_type.enum_class.shared == dest_type.enum_class.shared {
                 return True;
             }
+        }
+        # StrEnum/IntEnum members can assign to their value type (Tokens.NAME -> str)
+        if isinstance(dest_type, types.ClassType)
+        and isinstance(enum_val_type := src_type.enum_class.shared.enum_value_type, types.ClassType)
+        and dest_type.shared == enum_val_type.shared {
+            return True;
         }
     }
     if dest_type.is_class_instance() and src_type.is_class_instance() {
