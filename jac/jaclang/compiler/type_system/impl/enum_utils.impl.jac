@@ -58,7 +58,8 @@ impl create_enum_member_info(
 
 """Build enum members map for an enum or class-based enum."""
 impl build_enum_members(
-    enum_node: uni.Enum | uni.Archetype, evaluator: "TypeEvaluator"
+    enum_node: uni.Enum | uni.Archetype, evaluator: "TypeEvaluator",
+    enum_value_type: types.TypeBase | None = None
 ) -> dict[str, types.EnumMemberInfo] {
     members: dict[str, types.EnumMemberInfo] = {};
     if not enum_node.body {
@@ -93,6 +94,15 @@ impl build_enum_members(
                 if member_info.value_type is None {
                     member_info.value_type = int_type;
                     member_info.literal_value = auto_value;
+                }
+                # Validate value type matches required type (e.g., IntEnum members must be int)
+                if enum_value_type
+                and isinstance(member_info.value_type, types.ClassType)
+                and member_info.value_type.shared != enum_value_type.shared {
+                    evaluator.add_diagnostic(
+                        enum_node,
+                        f"Cannot assign {member_info.value_type} to enum member '{member_info.member_name}' of type {enum_value_type}"
+                    );
                 }
                 members[member_info.member_name] = member_info;
                 # Next member should get current value + 1
