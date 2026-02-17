@@ -24,9 +24,9 @@ def create_enum_member_info(
     assignment: uni.Assignment, evaluator: "TypeEvaluator"
 ) -> (types.EnumMemberInfo | None);
 
-"""Build enum members map for an enum class."""
+"""Build enum members map for an enum or class-based enum."""
 def build_enum_members(
-    enum_node: uni.Enum, evaluator: "TypeEvaluator"
+    enum_node: uni.Enum | uni.Archetype, evaluator: "TypeEvaluator"
 ) -> dict[str, types.EnumMemberInfo];
 
 """Get the value type for special enum subclasses from base classes."""

@@ -28,8 +28,7 @@ impl create_enum_member_info(
     # Valid: RED = 1, BLUE = 2
     # Invalid: __init__ (dunder), name/value (reserved), empty target
     if (
-        not assignment.is_enum_stmt
-        or not assignment.target
+        not assignment.target
         or len(assignment.target) == 0
         or not isinstance(target := assignment.target[0], (uni.NameAtom, uni.Name))
         or is_excluded_enum_member_name(member_name := target.value)
@@ -57,9 +56,9 @@ impl create_enum_member_info(
     );
 }
 
-"""Build enum members map for an enum class."""
+"""Build enum members map for an enum or class-based enum."""
 impl build_enum_members(
-    enum_node: uni.Enum, evaluator: "TypeEvaluator"
+    enum_node: uni.Enum | uni.Archetype, evaluator: "TypeEvaluator"
 ) -> dict[str, types.EnumMemberInfo] {
     members: dict[str, types.EnumMemberInfo] = {};
     if not enum_node.body {
@@ -76,9 +75,19 @@ impl build_enum_members(
     # If member has no value, assign next auto-increment number
     int_type = evaluator.prefetch.int_class if evaluator.prefetch else None;
     auto_value = 1;
+    # Collect all statements to process, flattening ModuleCode blocks
+    # (class-based enums nest assignments inside `with entry { }` blocks)
+    all_stmts: list = [];
     for stmt in body {
+        if isinstance(stmt, uni.ModuleCode) and stmt.body {
+            all_stmts.extend(stmt.body);
+        } else {
+            all_stmts.append(stmt);
+        }
+    }
+    for stmt in all_stmts {
         # Case 1: Assignment with explicit value (RED = 1)
-        if isinstance(stmt, uni.Assignment) and stmt.is_enum_stmt {
+        if isinstance(stmt, uni.Assignment) {
             if member_info := create_enum_member_info(stmt, evaluator) {
                 # No value? Use auto-increment
                 if member_info.value_type is None {
@@ -95,7 +104,6 @@ impl build_enum_members(
             # Case 2: Name-only member (RED, GREEN) - gets auto-incremented int value
         } elif (
             isinstance(stmt, uni.NameAtom)
-            and stmt.is_enum_stmt
             and not is_excluded_enum_member_name(member_name := stmt.value)
         ) {
             members[member_name] = types.EnumMemberInfo(

@@ -158,7 +158,7 @@ enum SymbolAccess {
 }
 
 """Token constants for the lexer."""
-class Tokens(str, Enum) {
+class Tokens(StrEnum) {
     with entry {
         FLOAT = 'FLOAT';
         STRING = 'STRING';
