@@ -172,9 +172,12 @@ impl TypeCheckPass.exit_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
     }
 }
 
-"""Exit an archetype node - build class type eagerly and traverse ImplDef body if present."""
+"""Exit an archetype node - build class type eagerly for Jac files and traverse ImplDef body if present."""
 impl TypeCheckPass.exit_archetype(self: TypeCheckPass, nd: uni.Archetype) -> None {
-    self.evaluator.get_type_of_class(nd);
+    # Eagerly evaluate class types for Jac files only (skip Python stdlib imports)
+    if nd.loc.orig_src.file_path.endswith(".jac") {
+        self.evaluator.get_type_of_class(nd);
+    }
     if isinstance(nd.body, uni.ImplDef) {
         self.traverse(nd.body);
     }
