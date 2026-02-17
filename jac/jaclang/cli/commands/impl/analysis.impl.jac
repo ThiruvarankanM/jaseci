@@ -48,6 +48,8 @@ impl check(
             new_warnings = prog.warnings_had[warn_start:];
             # Filter out errors/warnings from ignored files and non-.jac files
             # By default, only show errors from .jac files (not from Python stdlib, stubs, etc.)
+            # TODO: This is ad-hoc, need proper error handling across
+            # different file types; will be addressed in future refactor.
             def filter_issues(issues: list) -> list {
                 return [
                     i
@@ -532,5 +534,3 @@ impl grammar(lark: bool = False, output: str = "") -> int {
     }
     return 0;
 }
-# TODO: This is ad-hoc, need proper error handling across
-# different file types; will be addressed in future refactor.
