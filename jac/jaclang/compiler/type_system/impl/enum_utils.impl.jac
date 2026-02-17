@@ -58,7 +58,8 @@ impl create_enum_member_info(
 
 """Build enum members map for an enum or class-based enum."""
 impl build_enum_members(
-    enum_node: uni.Enum | uni.Archetype, evaluator: "TypeEvaluator",
+    enum_node: uni.Enum | uni.Archetype,
+    evaluator: "TypeEvaluator",
     enum_value_type: types.TypeBase | None = None
 ) -> dict[str, types.EnumMemberInfo] {
     members: dict[str, types.EnumMemberInfo] = {};
@@ -68,7 +69,6 @@ impl build_enum_members(
     # If member has no value, assign next auto-increment number
     int_type = evaluator.prefetch.int_class if evaluator.prefetch else None;
     auto_value = 1;
-
     # Use symbol table to collect member declarations
     # Handles native enums, impl-based enums (enum Color; impl Color { RED=1 }), and class-based enums (e.g., StrEnum with `with entry {}`)
     all_stmts: list = [

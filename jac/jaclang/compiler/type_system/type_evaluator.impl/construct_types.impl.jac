@@ -225,8 +225,10 @@ impl TypeEvaluator.get_type_of_class(node_: uni.Archetype) -> types.ClassType {
     import from jaclang.compiler.type_system { enum_utils }
     is_enum_class = any(
         isinstance(base, types.ClassType)
-        and (base.shared.is_enum_class or base.shared.class_name in enum_utils.ENUM_BASE_NAMES)
-        for base in base_classes
+        and (
+            base.shared.is_enum_class
+            or base.shared.class_name in enum_utils.ENUM_BASE_NAMES
+        ) for base in base_classes
     );
     enum_members: dict[str, types.EnumMemberInfo] | None = None;
     enum_value_type: types.TypeBase | None = None;

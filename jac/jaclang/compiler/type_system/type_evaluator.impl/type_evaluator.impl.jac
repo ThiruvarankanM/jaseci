@@ -1080,7 +1080,10 @@ impl TypeEvaluator.assign_type(src_type: TypeBase, dest_type: TypeBase) -> bool 
         }
         # StrEnum/IntEnum members can assign to their value type (Tokens.NAME -> str)
         if isinstance(dest_type, types.ClassType)
-        and isinstance(enum_val_type := src_type.enum_class.shared.enum_value_type, types.ClassType)
+        and isinstance(
+            enum_val_type := src_type.enum_class.shared.enum_value_type,
+            types.ClassType
+        )
         and dest_type.shared == enum_val_type.shared {
             return True;
         }
