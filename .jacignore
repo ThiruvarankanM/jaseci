@@ -18,6 +18,7 @@ checker_arity.jac
 checker_binary_op.jac
 checker_callable.jac
 checker_call_expr_class.jac
+checker_class_enum.jac
 checker_cat_is_animal.jac
 checker_class_construct.jac
 checker_connect_filter.jac
