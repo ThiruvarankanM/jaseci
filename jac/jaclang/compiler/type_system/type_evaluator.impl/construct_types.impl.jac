@@ -221,18 +221,16 @@ impl TypeEvaluator.get_type_of_class(node_: uni.Archetype) -> types.ClassType {
     # other classes are with symbol type TYPE.
     # TODO: We need to handle @dataclass decorator as well.
     is_data_class = node_.sym_category != SymbolType.TYPE;
-    # Detect enum classes: either native enum keyword or class inheriting from
-    # Enum/StrEnum/IntEnum (e.g., class Tokens(StrEnum) { ... })
-    _ENUM_BASE_NAMES = {"Enum", "IntEnum", "StrEnum", "IntFlag", "Flag", "ReprEnum"};
-    is_enum_class = node_.sym_category == SymbolType.ENUM_ARCH or any(
+    # Detect class-based enums: class inheriting from Enum/StrEnum/IntEnum etc.
+    import from jaclang.compiler.type_system { enum_utils }
+    is_enum_class = any(
         isinstance(base, types.ClassType)
-        and (base.shared.is_enum_class or base.shared.class_name in _ENUM_BASE_NAMES)
+        and (base.shared.is_enum_class or base.shared.class_name in enum_utils.ENUM_BASE_NAMES)
         for base in base_classes
     );
     enum_members: dict[str, types.EnumMemberInfo] | None = None;
     enum_value_type: types.TypeBase | None = None;
     if is_enum_class {
-        import from jaclang.compiler.type_system { enum_utils }
         enum_value_type = enum_utils.get_special_enum_value_type_from_bases(
             base_classes, self.prefetch
         );
