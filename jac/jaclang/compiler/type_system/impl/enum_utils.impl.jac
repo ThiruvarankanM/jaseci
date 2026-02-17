@@ -115,35 +115,43 @@ impl build_enum_members(
     return members;
 }
 
-"""Get value type from base classes (IntEnum→int, StrEnum→str, IntFlag→int).
+"""Get value type from base classes (IntEnum→int, StrEnum→str).
 
-Limitation: Uses name-based detection - may yield false positives for user
-classes with same names (e.g., class IntEnum) or miss aliased imports (e.g., a = StrEnum).
+Uses MRO-based type detection by checking for prefetched base types:
+- StrEnum: MRO contains both `str` and `Enum`
+- IntEnum: MRO contains both `int` and `Enum`
 
-TODO: Check if class comes from Python's enum module instead of just matching names.
+TODO: Handle IntFlag (int + Flag in MRO → int value type). Requires prefetching Flag class.
 """
 impl get_special_enum_value_type_from_bases(
     base_classes: list[types.TypeBase], prefetch: "PrefetchedTypes"
 ) -> (types.TypeBase | None) {
-    if not prefetch {
+    if not prefetch
+    or not prefetch.enum_class
+    or not prefetch.int_class
+    or not prefetch.str_class {
         return None;
     }
-    # Map special enum types to their required value types
-    enum_type_map = {
-        "IntEnum": prefetch.int_class,
-        "IntFlag": prefetch.int_class,
-        "StrEnum": prefetch.str_class
-    };
-    # Walk MRO chain to find if any base is IntEnum, StrEnum, or IntFlag
-    # Example: enum Foo(IntEnum) → finds IntEnum in MRO → returns int type
-    return next(
-        (
-            enum_type_map[mro_cls.shared.class_name]
-            for base in base_classes
-            if isinstance(base, types.ClassType)
-            for mro_cls in base.shared.mro
-            if mro_cls.shared.class_name in enum_type_map
-        ),
-        None
-    );
+    # Collect all unique classes from MRO of all base classes
+    mro_shared_set: set = set();
+    for base in base_classes {
+        if isinstance(base, types.ClassType) {
+            for mro_cls in base.shared.mro {
+                mro_shared_set.add(mro_cls.shared);
+            }
+        }
+    }
+    # Check for special enum patterns using prefetched type identity
+    has_enum = prefetch.enum_class.shared in mro_shared_set;
+    has_int = prefetch.int_class.shared in mro_shared_set;
+    has_str = prefetch.str_class.shared in mro_shared_set;
+    # StrEnum: str + Enum in MRO → str value type
+    if has_enum {
+        if has_str {
+            return prefetch.str_class;
+        } elif has_int {
+            return prefetch.int_class;
+        }
+    }
+    return None;
 }

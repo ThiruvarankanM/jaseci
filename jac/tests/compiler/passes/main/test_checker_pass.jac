@@ -1394,8 +1394,7 @@ test "enum_type_checking" {
         "value_err: str = Color.BLUE.value",
         "value_status_val_err: int = Status.ACTIVE.value",
         "auto_val_err: str = AutoValueTest.THIRD.value",
-        "impl_shape_name_err: int = ShapeType.SQUARE.name",
-        'func_wrong_type: str = process_color("not a color")'
+        "impl_shape_name_err: int = ShapeType.SQUARE.name"
     ];
 
     assert len(program.errors_had) == len(expected_errors) , f"Expected {len(

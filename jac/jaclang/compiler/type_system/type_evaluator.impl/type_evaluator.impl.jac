@@ -1172,6 +1172,8 @@ impl TypeEvaluator._prefetch_types{
         self._get_type_from_module(self.typing_module, type_name);
     get_builtin_type = lambda type_name: str  -> types.TypeBase :
         self._get_type_from_module(self.builtins_module, type_name);
+    get_enum_type = lambda type_name: str  -> types.TypeBase :
+        self._get_type_from_module(self.enum_module, type_name);
     get_jac_builtin_type = lambda type_name: str  -> types.TypeBase :
         self._get_type_from_module(self.jac_builtins_module, type_name);
     # TODO: Pyright first try load NoneType from typeshed and if it cannot
@@ -1191,7 +1193,7 @@ impl TypeEvaluator._prefetch_types{
     self.prefetch.str_class = get_builtin_type("str");
     self.prefetch.dict_class = get_builtin_type("dict");
     self.prefetch.list_class = get_builtin_type("list");
-    self.prefetch.enum_class = get_builtin_type("Enum");
+    self.prefetch.enum_class = get_enum_type("Enum");
     self.prefetch.protocol_class = get_typing_type("Protocol");
     self.prefetch.any_class = get_typing_type("Any");
     # Prefetch Callable and set alias_name. This single instance is reused
@@ -1251,6 +1253,9 @@ impl TypeEvaluator.init(program: "JacProgram") -> None {
     self._JAC_BUILTINS_STUB_FILE_PATH: str = os.path.join(
         os.path.dirname(__file__), "jac_builtins.pyi"
     );
+    self._ENUM_STUB_FILE_PATH: str = os.path.join(
+        os.path.dirname(__file__), "../../vendor/typeshed/stdlib/enum.pyi"
+    );
     self._SPECIAL_FORM_CLASS_NAMES: tuple[(str, ...)] = (
         "Union",
         "Protocol",
@@ -1276,6 +1281,7 @@ impl TypeEvaluator.init(program: "JacProgram") -> None {
     # NOTE: The initialization order here is important.
     self.typing_module = self._load_stub_module(self._TYPING_STUB_FILE_PATH);
     self.types_module = self._load_stub_module(self._TYPES_STUB_FILE_PATH);
+    self.enum_module = self._load_stub_module(self._ENUM_STUB_FILE_PATH);
     # These prefetch type are essential for the builtin types.
     self.prefetch.type_var_class = self._get_type_from_module(
         self.typing_module, "TypeVar"
