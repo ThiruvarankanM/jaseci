@@ -1194,6 +1194,9 @@ impl TypeEvaluator._prefetch_types{
     self.prefetch.dict_class = get_builtin_type("dict");
     self.prefetch.list_class = get_builtin_type("list");
     self.prefetch.enum_class = get_enum_type("Enum");
+    if isinstance(self.prefetch.enum_class, types.ClassType) {
+        self.prefetch.enum_class.shared.is_enum_class = True;
+    }
     self.prefetch.protocol_class = get_typing_type("Protocol");
     self.prefetch.any_class = get_typing_type("Any");
     # Prefetch Callable and set alias_name. This single instance is reused

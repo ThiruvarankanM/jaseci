@@ -14,8 +14,7 @@ with entry {
 }
 
 # Names that are excluded from enum membership
-glob ENUM_RESERVED_NAMES: set[str] = {'name','value','_name_','_value_','_ignore_','_order_','__order__','_missing_','_generate_next_value_'},
-     ENUM_BASE_NAMES: set[str] = {"Enum","IntEnum","StrEnum","IntFlag"};
+glob ENUM_RESERVED_NAMES: set[str] = {'name','value','_name_','_value_','_ignore_','_order_','__order__','_missing_','_generate_next_value_'};
 
 """Check if a name should be excluded from enum membership."""
 def is_excluded_enum_member_name(name: str) -> bool;
