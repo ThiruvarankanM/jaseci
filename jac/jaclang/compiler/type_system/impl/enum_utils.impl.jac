@@ -90,7 +90,7 @@ impl build_enum_members(
                 and isinstance(member_info.value_type, types.ClassType)
                 and member_info.value_type.shared != enum_value_type.shared {
                     evaluator.add_diagnostic(
-                        enum_node,
+                        stmt,
                         f"Cannot assign {member_info.value_type} to enum member '{member_info.member_name}' of type {enum_value_type}"
                     );
                 }
