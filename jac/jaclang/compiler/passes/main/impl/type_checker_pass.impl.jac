@@ -172,7 +172,10 @@ impl TypeCheckPass.exit_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
     }
 }
 
-"""Exit an archetype node - build class type eagerly for Jac files and traverse ImplDef body if present."""
+"""Exit a type alias node."""
+impl TypeCheckPass.exit_type_alias(self: TypeCheckPass, nd: uni.TypeAlias) -> None { }
+
+"""Exit an archetype node - traverse ImplDef body if present."""
 impl TypeCheckPass.exit_archetype(self: TypeCheckPass, nd: uni.Archetype) -> None {
     self.evaluator.get_type_of_class(nd);
     if isinstance(nd.body, uni.ImplDef) {
