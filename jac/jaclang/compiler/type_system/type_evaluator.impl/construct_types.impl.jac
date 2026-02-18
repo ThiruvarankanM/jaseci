@@ -224,8 +224,7 @@ impl TypeEvaluator.get_type_of_class(node_: uni.Archetype) -> types.ClassType {
     # Detect class-based enums: is_enum_class propagates from prefetched Enum.
     import from jaclang.compiler.type_system { enum_utils }
     is_enum_class = any(
-        isinstance(base, types.ClassType)
-        and base.shared.is_enum_class
+        isinstance(base, types.ClassType) and base.shared.is_enum_class
         for base in base_classes
     );
     enum_members: dict[str, types.EnumMemberInfo] | None = None;
