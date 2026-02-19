@@ -427,6 +427,15 @@ impl TypeEvaluator._get_special_form_type(
         case "Callable":
             return self.prefetch.callable_class;
 
+        case "Protocol":
+            return self.prefetch.protocol_class
+
+        case "Final":
+            return self.prefetch.final_class
+
+        case "LiteralString":
+            return self.prefetch.literal_string_class
+
         # Future special forms:
         # case "Union": return self.prefetch.union_class;
         # case "Optional": return self.prefetch.optional_class;

@@ -573,25 +573,6 @@ impl TypeEvaluator._get_type_of_symbol(symbol: uni.Symbol) -> TypeBase {
         # This actually defined in the function getTypeForDeclaration();
         # Pyright has DeclarationType.Variable.
         case uni.Name():
-            # ---- Handle SepcialForm in typing.pyi ----
-            # NOTE: This is different from pyright, that does get the same logic in
-            # getTypeOfAnnotation() which we don't have.
-            if node_.loc.mod_path {
-                node_mod_path = Path(node_.loc.mod_path).resolve();
-                typing_stub_path = Path(self._TYPING_STUB_FILE_PATH).resolve();
-                builtins_stub_path = Path(self._BUILTINS_STUB_FILE_PATH).resolve();
-                if node_mod_path in (typing_stub_path, builtins_stub_path) {
-                    match node_.sym_name {
-                        case "Final":
-                            return self.prefetch.final_class;
-
-                        case "LiteralString":
-                            return self.prefetch.literal_string_class;
-
-                    }
-                }
-            }
-
             # ---- Handle tuple/list unpacking targets ----
             # When a Name is inside a TupleVal/ListVal that is the target
             # of an Assignment, infer its type from the RHS tuple element.
@@ -627,7 +608,10 @@ impl TypeEvaluator._get_type_of_symbol(symbol: uni.Symbol) -> TypeBase {
                     annotation_type = self.get_type_of_expression(
                         node_.parent.type_tag.tag
                     );
-                    return self._convert_to_instance(annotation_type);
+                    result = self._convert_to_instance(annotation_type);
+                    # Use prefetched type for special forms (e.g. Callable) so is_special_form() works.
+                    return self._get_special_form_type(node_.sym_name, result)
+                    or result;
                 } else {  # Assignment without a type annotation.
 
                     if node_.parent.value is not None {
@@ -1221,6 +1205,11 @@ impl TypeEvaluator._load_stub_module(path: str) -> uni.Module {
     if not os.path.exists(path) {
         raise FileNotFoundError(f"Stub file not found at {path}") ;
     }
+    # Convert to absolute path so this function and _import_module_from_path share the same hub key.
+    resolved_path = str(Path(path).resolve());
+    if resolved_path in self.program.mod.hub {
+        return self.program.mod.hub[resolved_path];
+    }
     file_content = read_file_with_encoding(path);
     uni_source = uni.Source(file_content, path);
     mod = PyastBuildPass(
@@ -1228,7 +1217,7 @@ impl TypeEvaluator._load_stub_module(path: str) -> uni.Module {
         prog=self.program,
     ).ir_out;
     SymTabBuildPass(ir_in=mod, prog=self.program);
-    self.program.mod.hub[path] = mod;
+    self.program.mod.hub[resolved_path] = mod;
     return mod;
 }
 
