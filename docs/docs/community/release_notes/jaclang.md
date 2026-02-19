@@ -5,15 +5,19 @@ This document provides a summary of new features, improvements, and bug fixes in
 ## jaclang 0.10.6 (Unreleased)
 
 <<<<<<< new
+
 - **Fix: False Type Errors on `Callable`, `Final`, `LiteralString`, and `Protocol` Annotations**: Fixed incorrect type errors when using these special typing forms as annotations (e.g., `x: Final = 42` or `x: Callable = fn`). They are now correctly recognised by the type checker.
 
 ## jaclang 0.10.4 (Latest Release)
+
 =======
+
 ## jaclang 0.10.5 (Latest Release)
 
 - **Fix: `sv import` of `def:pub` Functions Generates RPC Stubs**: Fixed `sv import from module { func }` in `.cl.jac` files not generating for `def:pub` server functions.
 
 ## jaclang 0.10.4
+>>>>>>>
 >>>>>>> main
 
 - **`jac check/lint --ignore` Multi-Arg & Wildcard Support**: Enhanced `--ignore` flag to accept multiple space-separated patterns (`--ignore dir1 dir2 dir3`) instead of comma-separated strings. Added wildcard support using glob patterns (e.g., `--ignore "jac-*" test`) for flexible directory matching.
