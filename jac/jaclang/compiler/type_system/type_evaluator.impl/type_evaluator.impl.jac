@@ -605,9 +605,17 @@ impl TypeEvaluator._get_type_of_symbol(symbol: uni.Symbol) -> TypeBase {
             # ---- Handle simple assignment: var = <expr> ----
             if isinstance(node_.parent, uni.Assignment) {
                 if node_.parent.type_tag is not None {
-                    annotation_type = self.get_type_of_expression(
-                        node_.parent.type_tag.tag
-                    );
+                    annotation_node = node_.parent.type_tag.tag;
+                    # TypeAlias: Foo: TypeAlias = actual_type
+                    # The symbol IS the aliased type — return the RHS directly.
+                    if (
+                        isinstance(annotation_node, uni.Name)
+                        and annotation_node.sym_name == "TypeAlias"
+                        and node_.parent.value is not None
+                    ) {
+                        return self.get_type_of_expression(node_.parent.value);
+                    }
+                    annotation_type = self.get_type_of_expression(annotation_node);
                     result = self._convert_to_instance(annotation_type);
                     # Use prefetched type for special forms (e.g. Callable) so is_special_form() works.
                     return self._get_special_form_type(node_.sym_name, result)
