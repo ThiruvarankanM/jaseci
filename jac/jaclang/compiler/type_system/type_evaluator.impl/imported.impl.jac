@@ -15,19 +15,8 @@ impl TypeEvaluator.get_type_of_module_item(node_: uni.ModuleItem) -> types.TypeB
     }
     import_node = node_.parent_of_type(uni.Import);
     assert import_node.from_loc is not None;
-    from_mod = import_node.from_loc;
-    # For bare-dot imports (`from . import path`), compute from_path directly from mod_path
-    # to avoid sys.path interference; for named imports (`from .utils import x`), use modresolver.
-    bare_relative = from_mod.level > 0 and not from_mod.path;
-    if bare_relative {
-        base = Path(from_mod.loc.mod_path).parent;
-        for level_up in range(max(from_mod.level - 1, 0)) {
-            base = base.parent;
-        }
-        from_path = base;
-    } else {
-        from_path = Path(from_mod.resolve_relative_path());
-    }
+    # Resolve the base directory for the from-clause (e.g. from . import utils → current dir).
+    from_path = self._resolve_from_path(import_node.from_loc);
     from_mod_type = self.get_type_of_module(import_node.from_loc);
     if isinstance(from_mod_type, types.ModuleType) or from_path.exists() {
         is_dir = from_path.is_dir() or (from_path.stem == "__init__");
