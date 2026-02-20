@@ -5,6 +5,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 ## jaclang 0.10.6 (Unreleased)
 
 - **Fix:**: update the jac-check command to print the file names of the files that failed to have clean error message.
+- **Fix: Type Check Parameterless Init Calls**: Passing arguments to parameterless `init` methods now shows an error with `jac check`.
 
 ## jaclang 0.10.5 (Latest Release)
 
