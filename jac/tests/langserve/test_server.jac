@@ -383,7 +383,7 @@ test "test_go_to_def_import_star" {
             (5, 21, "import_star_mod_py.py:1:3-2:6"),
             (6, 16, "import_star_mod_jac.jac:0:4-0:7"),
             (6, 22, "import_star_mod_jac.jac:1:8-1:11"),
-            (8, 25, "_pydatetime.py:"),
+            (8, 25, "datetime.pyi:"),
 
         ];
 
