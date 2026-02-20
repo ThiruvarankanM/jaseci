@@ -1562,7 +1562,7 @@ test "bare_dot_relative_import" {
     assert len(program.errors_had) == 1;
     assert_error_pretty_found(
         """
-      glob err: str = checker_imported.some_int;
+      err: str = checker_imported.some_int;
     """,
         program.errors_had[0].pretty_print()
     );
