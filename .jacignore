@@ -280,3 +280,4 @@ NonGPT.impl.jac
 precompiled.jac
 random_check.jac
 test_pyast_build_pass.jac
+checker_bare_dot_import.jac
