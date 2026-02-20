@@ -266,3 +266,4 @@ top_voices.jac
 validate_docs_code.jac
 precompile_bytecode.jac
 cli.impl.jac
+checker_parameterless_init.jac
