@@ -21,7 +21,9 @@ This document provides a summary of new features, improvements, and bug fixes in
 - **Fix: Type Check Parameterless Init Calls**: Passing arguments to parameterless `init` methods now shows an error with `jac check`.
 
 ## jaclang 0.10.5 (Latest Release)
+
 =======
+
 - **ES Codegen: Near-Complete Primitive Test Coverage (92%)**: Added cross-backend equivalence tests for 110 additional primitive emitter interfaces (275/299 total), covering float operators, complex arithmetic, bytes methods (with full `_jac.bytes` runtime namespace), set/frozenset algebra and operators, and extra builtins. Fixed column-aware `expandtabs` for str and bytes, `complex.pow`/`complex.eq` mixed-type handling, and `ascii()` quoting to match Python semantics.
 - **Refactor: Native Jac Generics in Primitives**: Replaced Python-style `Generic[(V, C)]` with native Jac bracket syntax `[V, C]` across all emitter classes in `primitives.jac` and removed unused `TypeVar`/`Generic` imports.
 - **Fix: `jac format` Misplaces Comments Around Generic Type Params**: Fixed `jac format` moving section comments (e.g., `# === String Types ===`) into the `[V, C]` brackets of the preceding class. The parser was generating synthetic comma tokens between type parameters with incorrect source locations; `parse_type_params` now preserves the real comma tokens from the source.
@@ -35,6 +37,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 - **Migrate jac0core and Compiler Passes to Native Generics**: Replaced `Generic[(T, V)]` inheritance and `TypeVar` declarations with native `[T, V]` syntax across `transform.jac`, `unitree.jac`, `base_ast_gen_pass.jac`, and all `Transform[(X, Y)]` subscription sites in the compiler pipeline.
 
 ## jaclang 0.10.5
+>>>>>>>
 >>>>>>> main
 
 - **Fix: `sv import` of `def:pub` Functions Generates RPC Stubs**: Fixed `sv import from module { func }` in `.cl.jac` files not generating for `def:pub` server functions.
