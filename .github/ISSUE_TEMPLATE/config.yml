@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Jaseci Documentation"
+    url: https://www.jac-lang.org/
+    about: "Read the official Jaseci / Jac language documentation."
+  - name: "GitHub Discussions"
+    url: https://github.com/Jaseci-Labs/jaseci/discussions
+    about: "Ask questions and share ideas in our community discussions."
