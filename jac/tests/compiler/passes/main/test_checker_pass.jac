@@ -797,7 +797,9 @@ test "root_type" {
 
 test "inherit_method_lookup" {
     program = JacProgram();
-    mod = program.compile(os.path.join(CHECKER_FIXTURES, "checker_inherit_method_lookup.jac"));
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_inherit_method_lookup.jac")
+    );
     TypeCheckPass(ir_in=mod, prog=program);
     user_errors = [
         e
@@ -811,7 +813,9 @@ test "inherit_method_lookup" {
 
 test "inherit_init_params" {
     program = JacProgram();
-    mod = program.compile(os.path.join(CHECKER_FIXTURES, "checker_inherit_init_params.jac"));
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_inherit_init_params.jac")
+    );
     TypeCheckPass(ir_in=mod, prog=program);
     assert len(program.errors_had) == 2;
 
@@ -849,7 +853,9 @@ test "agentvisitor_connect_no_errors" {
 
 test "union_reassignment" {
     program = JacProgram();
-    mod = program.compile(os.path.join(CHECKER_FIXTURES, "checker_union_reassignment.jac"));
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_union_reassignment.jac")
+    );
     TypeCheckPass(ir_in=mod, prog=program);
     assert len(program.errors_had) == 3;
     assert_error_pretty_found(
@@ -1017,7 +1023,9 @@ test "overload_decorator" {
 
 test "function_overload_decorator" {
     program = JacProgram();
-    mod = program.compile(os.path.join(CHECKER_FIXTURES, "checker_function_overload.jac"));
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_function_overload.jac")
+    );
     TypeCheckPass(ir_in=mod, prog=program);
     assert len(program.errors_had) == 1;
 
@@ -1086,14 +1094,18 @@ test "walrus_operator" {
 
 test "builtin_constructors" {
     program = JacProgram();
-    mod = program.compile(os.path.join(CHECKER_FIXTURES, "checker_builtin_constructors.jac"));
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_builtin_constructors.jac")
+    );
     TypeCheckPass(ir_in=mod, prog=program);
     assert len(program.errors_had) == 0;
 }
 
 test "union_type_annotation" {
     program = JacProgram();
-    mod = program.compile(os.path.join(CHECKER_FIXTURES, "checker_union_type_annotation.jac"));
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_union_type_annotation.jac")
+    );
     TypeCheckPass(ir_in=mod, prog=program);
     assert len(program.errors_had) == 1;
     assert_error_pretty_found(
@@ -1168,7 +1180,9 @@ test "slice_type_checking" {
 
 test "numeric_type_promotion" {
     program = JacProgram();
-    mod = program.compile(os.path.join(CHECKER_FIXTURES, "checker_numeric_promotion.jac"));
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_numeric_promotion.jac")
+    );
     TypeCheckPass(ir_in=mod, prog=program);
     assert len(program.errors_had) == 3;
 
@@ -1590,7 +1604,9 @@ test "bare_dot_relative_import" {
 """Test type narrowing detects None assignment to non-None type in else branches."""
 test "type_narrowing_none_assignment_errors" {
     program = JacProgram();
-    mod = program.compile(os.path.join(CHECKER_FIXTURES, "checker_type_narrowing_none.jac"));
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_type_narrowing_none.jac")
+    );
     TypeCheckPass(ir_in=mod, prog=program);
 
     assert len(program.errors_had) == 2 , f"Expected 2 errors, got {len(
@@ -1615,7 +1631,9 @@ test "type_narrowing_none_assignment_errors" {
 """Test match case type narrowing - validates type narrowing inside match cases."""
 test "match_type_narrowing" {
     program = JacProgram();
-    mod = program.compile(os.path.join(CHECKER_FIXTURES, "checker_match_type_narrowing.jac"));
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_match_type_narrowing.jac")
+    );
     TypeCheckPass(ir_in=mod, prog=program);
 
     # Should have exactly 2 errors (E1 and E2 in the test file)
@@ -1674,7 +1692,9 @@ test "compound_and_narrowing" {
 """Test assert isinstance type narrowing."""
 test "assert_isinstance_narrowing" {
     program = JacProgram();
-    mod = program.compile(os.path.join(CHECKER_FIXTURES, "checker_assert_narrowing.jac"));
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_assert_narrowing.jac")
+    );
     TypeCheckPass(ir_in=mod, prog=program);
 
     # All cases should pass - assert isinstance narrows the type
