@@ -1706,7 +1706,7 @@ test "assert_isinstance_narrowing" {
 """Test impl files can access imports from their parent .jac file."""
 test "impl_imports_from_parent" {
     program = JacProgram();
-    path = os.path.join(FIXTURES, "checker_impl_imports.jac");
+    path = os.path.join(CHECKER_FIXTURES, "checker_impl_imports.jac");
     mod = program.compile(path);
     TypeCheckPass(ir_in=mod, prog=program);
 
