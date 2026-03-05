@@ -65,7 +65,7 @@ test "super_init_py_to_jac_roundtrip" {
     code_gen = (prog := JacProgram()).compile(
         os.path.join(FIXTURES, "super_init_base.py")
     );
-    assert not prog.errors_had, f"Compilation errors: {prog.errors_had}";
+    assert not prog.errors_had , f"Compilation errors: {prog.errors_had}";
     if code_gen.gen.py_ast and isinstance(code_gen.gen.py_ast[0], ast3.Module) {
         compiled = compile(code_gen.gen.py_ast[0], filename="<ast>", mode="exec");
         captured = io.StringIO();
@@ -84,9 +84,9 @@ test "super_init_py_to_jac_roundtrip" {
         }
         output = captured.getvalue();
         # Verify super().__init__() calls work correctly in inheritance chain
-        assert "Base init" in output, f"Expected 'Base init' in output, got: {output}";
-        assert "Child init" in output, f"Expected 'Child init' in output, got: {output}";
-        assert "GrandChild init" in output, f"Expected 'GrandChild init' in output, got: {output}";
+        assert "Base init" in output , f"Expected 'Base init' in output, got: {output}";
+        assert "Child init" in output , f"Expected 'Child init' in output, got: {output}";
+        assert "GrandChild init" in output , f"Expected 'GrandChild init' in output, got: {output}";
         # Verify the order of initialization (base classes init before derived)
         lines = output.strip().split("\n");
         assert lines == [
@@ -95,7 +95,7 @@ test "super_init_py_to_jac_roundtrip" {
             "Base init",
             "Child init",
             "GrandChild init"
-        ], f"Unexpected initialization order: {lines}";
+        ] , f"Unexpected initialization order: {lines}";
     }
 }
 
