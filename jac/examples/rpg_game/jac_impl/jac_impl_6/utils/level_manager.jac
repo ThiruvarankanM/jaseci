@@ -1,6 +1,6 @@
 import from byllm.lib { Model }
 
-glob llm = Model(model_name="gpt-4o", config={"verbose": True});
+glob llm = Model(model_name="gpt-4o", verbose=True);
 
 obj Position {
     has x: int,
@@ -42,8 +42,8 @@ obj LevelManager {
 
     def create_next_map(level: Level) -> Map_tiles by llm(temperature=0.8);
     '''Get the Next Level'''
-    def get_next_level(current_level: int) -> list[str];
+    def get_next_level(current_level: int) -> tuple(Level,Map_tiles)
 
     '''Get the map of the level'''
-    def get_map(map: Map_tiles) -> list[str];
+    def get_map(map: Map_tiles) -> str;
 }

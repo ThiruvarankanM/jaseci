@@ -5,7 +5,7 @@ impl foo{
 }
 
 obj out {
-    has cnt: int;
+    has cnt: int = 0;
 
     def bar;
     def baz;
@@ -21,7 +21,7 @@ impl out.baz{
 
 with entry {
     foo();
-    new = out(cnt=0);
+    new = out();
     new.cnt;
     out(1).bar();
 }

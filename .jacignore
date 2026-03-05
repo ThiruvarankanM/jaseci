@@ -75,6 +75,7 @@ jsx_unterminated_hang.jac
 kubernetes_utils.impl.jac
 kubernetes_utils.jac
 lang_tools.jac
+level_manager.jac
 llm.jac
 macho_linker.impl.jac
 macho_linker.jac
