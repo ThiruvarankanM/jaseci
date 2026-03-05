@@ -21,7 +21,7 @@ impl out.baz{
 
 with entry {
     foo();
-    new = out();
+    new = out(cnt=0);
     new.cnt;
     out(1).bar();
 }

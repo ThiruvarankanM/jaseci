@@ -1,4 +1,4 @@
-def star(func: Any) {
+def star(func: Any) -> Any {
     def inner(x: Any) {
         print(("*" * 30));
         func(x);
@@ -7,7 +7,7 @@ def star(func: Any) {
     return inner;
 }
 
-def percent(func: Any) {
+def percent(func: Any) -> Any {
     def inner(y: Any) {
         print(("%" * 30));
         func(y);
@@ -16,7 +16,7 @@ def percent(func: Any) {
     return inner;
 }
 
-def percent2(func: Any) {
+def percent2(func: Any) -> Any {
     def inner(y: Any) {
         print(("-" * 30));
         func(y);
