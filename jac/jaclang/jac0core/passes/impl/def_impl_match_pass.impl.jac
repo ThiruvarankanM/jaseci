@@ -178,10 +178,8 @@ impl DeclImplMatchPass.validate_params_match(
             );
         } elif (params_decl and params_defn) {
             for idx in range(len(params_defn)) {
-                # Only update the params list to impl's params for type inference.
-                # Keep decl's ParamVar in FuncSignature.kid so TypeCheckPass
-                # traverses it naturally, resolving type annotation names for
-                # hover/go-to-def in the declaration file.
+                # Keep stub's param in kid list (for hover/go-to-def in stub file).
+                # Only update params list to impl's param (for type inference).
                 params_decl[idx] = params_defn[idx];
             }
         }
