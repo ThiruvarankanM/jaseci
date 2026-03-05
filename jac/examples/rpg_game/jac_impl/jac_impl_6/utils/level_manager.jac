@@ -1,6 +1,6 @@
 import from byllm.lib { Model }
 
-glob llm = Model(model_name="gpt-4o", verbose=True);
+glob llm = Model(model_name="gpt-4o", config={"verbose": True});
 
 obj Position {
     has x: int,
