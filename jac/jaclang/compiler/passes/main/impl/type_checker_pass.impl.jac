@@ -192,14 +192,14 @@ impl TypeCheckPass.enter_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
     }
 }
 
-"""Exit ability - resolve stub param type annotations and traverse ImplDef body."""
+"""Exit an ability node - ensure parameter type annotations are evaluated."""
 impl TypeCheckPass.exit_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
     if isinstance(nd.body, uni.ImplDef) {
-        ability_start_line = nd.loc.first_line;
-        ability_end_line = nd.loc.last_line;
         # Stub params are swapped out of the kid list by def_impl_match_pass,
         # so their SubTag annotation nodes become orphaned. Traverse them
         # explicitly so color and go-to-def work in the stub file.
+        ability_start_line = nd.loc.first_line;
+        ability_end_line = nd.loc.last_line;
         if module := nd.find_parent_of_type(uni.Module) {
             for mod_nd in module._in_mod_nodes {
                 if (
@@ -210,7 +210,8 @@ impl TypeCheckPass.exit_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
                 }
             }
         }
-        # ImplDef body is not in the kid list, traverse it explicitly.
+        # The ImplDef body is not in the Ability's kid list, so it's not traversed by the pass.
+        # We need to explicitly traverse the ImplDef body to evaluate types for hover/go-to-def.
         self.traverse(nd.body);
     }
 }
