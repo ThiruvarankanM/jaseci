@@ -192,15 +192,14 @@ impl TypeCheckPass.enter_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
     }
 }
 
-"""Exit an ability node - resolve orphaned param type annotations and traverse ImplDef body."""
+"""Exit ability - resolve stub param type annotations and traverse ImplDef body."""
 impl TypeCheckPass.exit_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
     if isinstance(nd.body, uni.ImplDef) {
         ability_start_line = nd.loc.first_line;
         ability_end_line = nd.loc.last_line;
-        # Stub params are replaced in the kid list by impl params, orphaning the stub's
-        # type annotation subtrees (sym stays None, no color/go-to-def). Rescue by
-        # traversing each orphaned SubTag — the pass's own exit handlers resolve all
-        # annotation shapes (simple, compound, generics, unions) naturally.
+        # Stub params are swapped out of the kid list by def_impl_match_pass,
+        # so their SubTag annotation nodes become orphaned. Traverse them
+        # explicitly so color and go-to-def work in the stub file.
         if module := nd.find_parent_of_type(uni.Module) {
             for mod_nd in module._in_mod_nodes {
                 if (
@@ -211,7 +210,7 @@ impl TypeCheckPass.exit_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
                 }
             }
         }
-        # ImplDef body is not in kid list, traverse it explicitly.
+        # ImplDef body is not in the kid list, traverse it explicitly.
         self.traverse(nd.body);
     }
 }
