@@ -208,14 +208,10 @@ impl TypeCheckPass.enter_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
 
 """Exit an ability node - ensure parameter type annotations are evaluated and check return completeness."""
 impl TypeCheckPass.exit_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
-    import from jaclang.compiler.type_system { types }
-    # For abilities with ImplDef body (stubs linked to impl files), the original declaration's
-    # type annotation Name nodes are orphaned (not in the traversal tree). We need to explicitly
-    # process them to enable hover/go-to-definition on the declaration file.
+    # Stub params are swapped out of the kid list by def_impl_match_pass,
+    # so their SubTag annotation nodes become orphaned. Traverse them
+    # explicitly so color and go-to-def work in the stub file.
     if isinstance(nd.body, uni.ImplDef) {
-        # Stub params are swapped out of the kid list by def_impl_match_pass,
-        # so their SubTag annotation nodes become orphaned. Traverse them
-        # explicitly so color and go-to-def work in the stub file.
         ability_start_line = nd.loc.first_line;
         ability_end_line = nd.loc.last_line;
         if module := nd.find_parent_of_type(uni.Module) {

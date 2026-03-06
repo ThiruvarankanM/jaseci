@@ -4,17 +4,11 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## jaclang 0.12.1 (Unreleased)
 
+- **Fix: Go-to-Definition and Highlighting for Parameter Types**: Types like `uni.Module` in function parameter annotations now show correct colors and support go-to-definition in `.jac` stub files. Previously they appeared uncolored with no go-to-def.
+
 ## jaclang 0.12.0 (Latest Release)
 
-<<<<<<< goto-new
-
-- 26 small refactors/changes.
-- **Fix: Go-to-Definition and Highlighting for Parameter Types**: Types like `uni.Module` in function parameter annotations now show correct colors and support go-to-definition in `.jac` stub files. Previously they appeared uncolored with no go-to-def.
-=======
 - 27 small refactors/changes.
-
->>>>>>> main
-
 - **Fix: Formatter Semicolon & Decorator Spacing**: Fixed spacing bugs in the formatter where `@` decorators produced `@ decorator` instead of `@decorator`, and statement semicolons produced `raise ;` instead of `raise;`.
 - **Fix: Type Checker Validates Args Against Parameterless `init`**: The type checker now correctly reports an error when arguments are passed to a constructor whose `init` takes no parameters. Named args raise `Named argument does not match any parameter` and extra positional args raise `Too many positional arguments`. Calling with no args (`MyObj()`) remains valid.
 - **Automatic Port Fallback for `jac start`**: When starting the built-in HTTP server, if the specified port is already in use, the server now automatically finds and uses the next available port instead of crashing with "Address already in use". A warning message displays when using an alternative port. The `on_ready` callback signature updated to `Callable[[int], None]` to pass the actual bound port.
