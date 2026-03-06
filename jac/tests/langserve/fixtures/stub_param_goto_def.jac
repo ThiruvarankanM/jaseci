@@ -1,8 +1,4 @@
-"""Test fixture for go-to-def and highlighting on compound param types in stub files.
-
-Each case tests a different annotation shape containing uni.Module in parameter position.
-The return type baseline (get_module) has always worked — the parameter cases were broken.
-"""
+"""Test fixture for go-to-def and highlighting on compound param types in stub files."""
 
 import jaclang.jac0core.unitree as uni;
 import from typing { Optional }
