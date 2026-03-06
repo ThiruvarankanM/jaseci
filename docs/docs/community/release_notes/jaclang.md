@@ -4,7 +4,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## jaclang 0.12.1 (Unreleased)
 
-- **Fix: Go-to-Definition and Highlighting for Parameter Types**: Types like `uni.Module` in function parameter annotations now show correct colors and support go-to-definition in `.jac` stub files. Previously they appeared uncolored with no go-to-def.
+- **Fix: Parameter Type Highlighting and Go-to-Definition**: Types used in function parameters (e.g. `uni.Module`) now highlight correctly and support go-to-definition in `.jac` stub files.
 
 ## jaclang 0.12.0 (Latest Release)
 
