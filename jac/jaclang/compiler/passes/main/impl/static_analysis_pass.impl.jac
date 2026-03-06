@@ -12,6 +12,10 @@ impl StaticAnalysisPass.after_pass -> None {
     self._check_unused_symbols(self.ir_in);
     self._check_undefined_names(self.ir_in);
     self._check_unreachable_code(self.ir_in);
+    for impl_mod in self.ir_in.impl_mod {
+        self._check_undefined_names(impl_mod);
+        self._check_unreachable_code(impl_mod);
+    }
 }
 
 """Walk all scopes and warn on symbols that are defined but never used."""
@@ -120,6 +124,7 @@ impl StaticAnalysisPass._check_unreachable_code(mod: uni.Module) -> None {
     # Collect all code body containers
     container_types = [
         uni.Ability,
+        uni.ImplDef,
         uni.IfStmt,
         uni.ElseStmt,
         uni.ElseIf,

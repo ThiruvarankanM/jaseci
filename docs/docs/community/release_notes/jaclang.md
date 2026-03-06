@@ -4,6 +4,8 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## jaclang 0.12.1 (Unreleased)
 
+- **Fix: Errors in `.impl.jac` Files Now Reported by `jac check` and `jac run`**: Undefined names and unreachable code inside `.impl.jac` files were previously silently ignored. They are now correctly reported as warnings, pointing to the exact file and line.
+
 ## jaclang 0.12.0 (Latest Release)
 
 - 27 small refactors/changes.
