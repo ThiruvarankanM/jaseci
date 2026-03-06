@@ -192,11 +192,31 @@ impl TypeCheckPass.enter_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
     }
 }
 
-"""Exit an ability node - traverse ImplDef body if present."""
+"""Exit an ability node - resolve orphaned param type annotations and traverse ImplDef body."""
 impl TypeCheckPass.exit_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
-    # Only process stubs linked to an impl file
     if isinstance(nd.body, uni.ImplDef) {
-        # ImplDef body is not in kid list, traverse it explicitly
+        ability_start_line = nd.loc.first_line;
+        ability_end_line = nd.loc.last_line;
+        # Stub params are replaced in the kid list by impl params, so the stub's
+        # type annotation Name nodes become orphaned (sym stays None, no color/go-to-def).
+        # Rescue them here. For compound types like `uni.Module`, the Name node's
+        # parent is AtomTrailer (not SubTag), so we also call get_type_of_expression
+        # on the AtomTrailer to resolve the full dotted path.
+        if module := nd.find_parent_of_type(uni.Module) {
+            for mod_nd in module._in_mod_nodes {
+                if (
+                    isinstance(mod_nd, uni.Name)
+                    and mod_nd.sym is None
+                    and ability_start_line <= mod_nd.loc.first_line <= ability_end_line
+                ) {
+                    self.evaluator.get_type_of_expression(mod_nd);
+                    if isinstance(mod_nd.parent, uni.AtomTrailer) {
+                        self.evaluator.get_type_of_expression(mod_nd.parent);
+                    }
+                }
+            }
+        }
+        # ImplDef body is not in kid list, traverse it explicitly.
         self.traverse(nd.body);
     }
 }

@@ -178,8 +178,10 @@ impl DeclImplMatchPass.validate_params_match(
             );
         } elif (params_decl and params_defn) {
             for idx in range(len(params_defn)) {
-                # Keep stub's param in kid list (for hover/go-to-def in stub file).
-                # Only update params list to impl's param (for type inference).
+                if ((par := params_decl[idx].parent) is not None) {
+                    loc_in_kid = par.kid.index(params_decl[idx]);
+                    par.kid[loc_in_kid] = params_defn[idx];
+                }
                 params_decl[idx] = params_defn[idx];
             }
         }
