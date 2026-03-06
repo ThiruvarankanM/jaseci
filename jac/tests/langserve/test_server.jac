@@ -772,6 +772,7 @@ test "test_go_to_definition_stub_param_compound_types" {
             (16, 38, "union param: uni.Module | None"),
             (18, 45, "dict param: dict[str, uni.Module]"),
             (20, 43, "Optional param: Optional[uni.Module]"),
+
         ];
 
         for (line, col, desc) in positions {
