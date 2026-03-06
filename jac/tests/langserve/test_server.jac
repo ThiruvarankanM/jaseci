@@ -767,11 +767,11 @@ test "test_go_to_definition_stub_param_compound_types" {
 
         # (line, col, description) — 1-indexed; col points to `Module` in `uni.Module`
         positions = [
-            (12, 47, "simple param: uni.Module"),
-            (14, 40, "list param: list[uni.Module]"),
-            (16, 38, "union param: uni.Module | None"),
-            (18, 45, "dict param: dict[str, uni.Module]"),
-            (20, 43, "Optional param: Optional[uni.Module]"),
+            (8, 47, "simple param: uni.Module"),
+            (10, 40, "list param: list[uni.Module]"),
+            (12, 38, "union param: uni.Module | None"),
+            (14, 45, "dict param: dict[str, uni.Module]"),
+            (16, 43, "Optional param: Optional[uni.Module]"),
 
         ];
 
