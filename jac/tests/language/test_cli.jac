@@ -843,6 +843,32 @@ test "format preserves file on syntax error" {
     }
 }
 
+test "format --lintfix preserves file on parse error" {
+    with tempfile.TemporaryDirectory() as tmpdir {
+        test_file = os.path.join(tmpdir, "parse_error.jac");
+        # Parse error: 'can' without 'with' (should be 'def' for function-style)
+        original_content = 'obj User {\n    can say_name() {\n        print("hi");\n    }\n}\n';
+        with open(test_file, "w") as f {
+            f.write(original_content);
+        }
+        captured_stderr = io.StringIO();
+        old_stderr = sys.stderr;
+        sys.stderr = captured_stderr;
+        try {
+            analysis.format([test_file], lintfix=True);
+        } finally {
+            sys.stderr = old_stderr;
+        }
+        with open(test_file) as f {
+            actual_content = f.read();
+            assert actual_content == original_content , (
+                f"format --lintfix deleted/modified file with parse error. "
+                f"Expected: {repr(original_content)}, Got: {repr(actual_content)}"
+            );
+        }
+    }
+}
+
 test "jac create and run no root files" {
     _ensure_template_registry();
     _tmpdir = tempfile.mkdtemp();
@@ -1522,6 +1548,70 @@ test "jac cli check ignore with wildcards" {
     test_dir = fixture_path("deep");
     result_count = _run_jac_check(test_dir, ["one_lev*", "snd_*"]);
     assert result_count == 3;
+}
+
+test "jac check shows warnings for files with warnings only" {
+    captured_stdout = io.StringIO();
+    captured_stderr = io.StringIO();
+    old_stdout = sys.stdout;
+    old_stderr = sys.stderr;
+    sys.stdout = captured_stdout;
+    sys.stderr = captured_stderr;
+
+    try {
+        result = analysis.check([fixture_path("warnings_only.jac")]);
+        stdout = captured_stdout.getvalue();
+        stderr = captured_stderr.getvalue();
+    } finally {
+        sys.stdout = old_stdout;
+        sys.stderr = old_stderr;
+    }
+
+    combined = stdout + stderr;
+
+    # Should exit with code 0 (warnings don't fail the check)
+    assert result == 0 , "check should exit with code 0 for warnings only";
+
+    # Should show FAILURES section with warnings
+    assert "FAILURES" in combined , "should display FAILURES section for warnings";
+
+    # Should show the warning messages
+    assert "defined but never used" in combined , "should display unused variable warnings";
+
+    # Should show warning indicators
+    assert "warning" in combined.lower() , "should indicate warnings in output";
+
+    # File should appear in summary with warnings count
+    assert "warnings_only.jac" in combined , "should show file path in output";
+}
+
+test "jac check nowarn flag suppresses warnings" {
+    captured_stdout = io.StringIO();
+    captured_stderr = io.StringIO();
+    old_stdout = sys.stdout;
+    old_stderr = sys.stderr;
+    sys.stdout = captured_stdout;
+    sys.stderr = captured_stderr;
+
+    try {
+        result = analysis.check([fixture_path("warnings_only.jac")], nowarn=True);
+        stdout = captured_stdout.getvalue();
+        stderr = captured_stderr.getvalue();
+    } finally {
+        sys.stdout = old_stdout;
+        sys.stderr = old_stderr;
+    }
+
+    combined = stdout + stderr;
+
+    # Should still exit with code 0
+    assert result == 0 , "check should exit with code 0 when warnings are suppressed";
+
+    # Should show PASSED status
+    assert "PASSED" in combined , "should show PASSED when warnings are suppressed";
+
+    # Should NOT show detailed warning messages
+    assert "defined but never used" not in combined , "should not display warning details when nowarn=True";
 }
 
 test "lexer does not hang on unterminated jsx" {
