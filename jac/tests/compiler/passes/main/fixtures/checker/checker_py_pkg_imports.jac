@@ -5,9 +5,6 @@
 import from py_pkg_imports { MyClass, subpkg }
 
 with entry {
-    obj = MyClass(42);
-    greeting: str = obj.greet();  # OK: greet() -> str
-
-    inner = subpkg.InnerClass(1);  # OK: subpkg is ModuleType with InnerClass
-    v: int = inner.val;            # OK: val is int
+    greeting: str = MyClass(42).greet();  # OK: greet() -> str
+    v: int = subpkg.InnerClass(1).val;    # OK: subpkg is ModuleType with InnerClass
 }
