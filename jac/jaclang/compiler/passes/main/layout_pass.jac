@@ -73,7 +73,8 @@ obj LayoutRegistry {
     has layouts: dict[str, ArchetypeLayout] = {},
         class_parents: dict[str, list[str]] = {},
         mro_order: dict[str, list[str]] = {},
-        topo_order: list[str] = [];
+        topo_order: list[str] = [],
+        enum_names: set[str] = set();
 
     def get_layout(name: str) -> (ArchetypeLayout | None);
     def get_mro(name: str) -> list[str];
