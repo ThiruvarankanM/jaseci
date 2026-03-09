@@ -1956,6 +1956,7 @@ test "py_pkg_imports" {
     program = JacProgram();
     mod = program.compile(os.path.join(CHECKER_FIXTURES, "checker_py_pkg_imports.jac"));
     TypeCheckPass(ir_in=mod, prog=program);
+    assert len(program.errors_had) == 0;
     assert mod.sym_tab.lookup("MyClass") is not None , "MyClass not in sym_tab - star re-export chain broken";
     assert mod.sym_tab.lookup("subpkg") is not None , "subpkg not in sym_tab - subpackage resolution broken";
 }
