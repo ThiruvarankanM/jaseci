@@ -7,7 +7,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 - **Fix: Python Package Imports**: Fixed two import bugs. (1) `import from mypkg { MyClass }` now works when `mypkg/__init__.py` re-exports via `from .mymod import *` — previously the type checker couldn't find `MyClass`. (2) `import from mypkg { subpkg }` now correctly types `subpkg` as a module — previously it failed when `subpkg` is a sub-package inside `mypkg`.
 - **Refactor: `GUEST` Constant for Guest Username**: Added a `GUEST = '__guest__'` constant to `Constants` enum and replaced hardcoded `'__guest__'` strings in the stdlib HTTP server with `Con.GUEST.value` for improved maintainability and consistency.
 - **Fix: Native Cross-Module Global Variable Access**: Module-level globals declared in one `.na.jac` file are now correctly accessible from importing modules. Previously, accessing such a global caused a segfault at runtime.
-- 3 small refactors/changes.
+- 4 small refactors/changes.
 - **Fix: HMR Recursive recompilation**: Fixed client-side code recursive recompilation process, preventing cyclic recompilation, and ensuring that all dependencies are up to date.
 - **Fix: HTTP Server Authentication for Imported `:pub` Functions**: Fixed server incorrectly requiring authentication (401) for imported `:pub` functions. The server now inspects source file ASTs to determine access levels for imported function endpoints, matching the existing behavior for imported walkers.
 - **Compiler Warns on `@classmethod`/`@staticmethod` in `obj` Definitions**: Using `@classmethod` or `@staticmethod` inside `obj`, `node`, `edge`, or `walker` now emits a warning. Use the `static` keyword instead, or switch to `class` for Python-specific decorator features. Compilation warnings are now also surfaced during `jac run`.
@@ -19,6 +19,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 - **Style: Remove Bold from CLI Console Output**: Removed bold styling from all console output methods (success, error, warning, info, headers, tables, etc.) in the base jacpretty console, keeping only color.
 - **Fix: Raw ANSI Codes in Error Output**: Fixed `[0;31m` escape fragments appearing as literal text in terminal error messages. `pretty_print(colors=True)` was injecting raw ANSI codes that conflicted with the Rich-based console from jac-super. Error formatting now delegates all styling to the console layer.
 - **Native: Function Pointer Support for C FFI Callbacks**: Jac `def` functions can now be passed as raw function pointers to C library calls in native code, enabling callback-based C APIs (e.g. libuv timers, async I/O) to be driven directly from Jac.
+- **Fix: jacpretty Crash on Hex-like Patterns**: Fixed `ValueError` crash when `render_markup` encounters strings like `#2000"}` in JSON data. Added input validation for `rgb()`, `color()`, and hex color parsing.
 
 ## jaclang 0.12.0 (Latest Release)
 
