@@ -193,11 +193,6 @@ impl run(
         mach.close();
         return 1;
     }
-    if Jac.program.warnings_had {
-        for warning in Jac.program.warnings_had {
-            console.warning(f"{warning}");
-        }
-    }
     sys.argv = original_argv;
     mach.close();
     return 0;
