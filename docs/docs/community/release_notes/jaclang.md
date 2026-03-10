@@ -4,6 +4,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## jaclang 0.12.1 (Unreleased)
 
+- **Fix: `jac check` on `.impl.jac` / `.test.jac` Files**: Annex files passed directly to `jac check` are now redirected to their parent module for compilation instead of being compiled standalone (which silently missed all type errors). During directory traversal, `.impl.jac` and `.test.jac` files are skipped since they are already type-checked as part of their parent module. Errors and warnings that land in the compiler's internal program singleton are now merged into the reported output.
 - **Refactor: `GUEST` Constant for Guest Username**: Added a `GUEST = '__guest__'` constant to `Constants` enum and replaced hardcoded `'__guest__'` strings in the stdlib HTTP server with `Con.GUEST.value` for improved maintainability and consistency.
 - **Fix: Native Cross-Module Global Variable Access**: Module-level globals declared in one `.na.jac` file are now correctly accessible from importing modules. Previously, accessing such a global caused a segfault at runtime.
 - 4 small refactors/changes.

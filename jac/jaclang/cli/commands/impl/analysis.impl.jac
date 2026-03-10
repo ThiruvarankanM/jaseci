@@ -63,9 +63,20 @@ impl check(
         try {
             console.print(f"  Checking {file_path}...");
             (err_start, warn_start) = (len(prog.errors_had), len(prog.warnings_had));
+            _compiler = prog._get_compiler();
+            _int_prog = _compiler._internal_program;
+            int_err_start = len(_int_prog.errors_had) if _int_prog else 0;
+            int_warn_start = len(_int_prog.warnings_had) if _int_prog else 0;
             prog.compile(file_path=file_path, type_check=not parse_only, no_cgen=True);
-            new_errors = prog.errors_had[err_start:];
-            new_warnings = prog.warnings_had[warn_start:];
+            new_errors = list(prog.errors_had[err_start:]);
+            new_warnings = list(prog.warnings_had[warn_start:]);
+            # Merge errors that landed in internal_program (jaclang-internal files
+            # are routed to a shared singleton by JacCompiler._resolve_program).
+            _int_prog_after = _compiler._internal_program;
+            if _int_prog_after {
+                new_errors.extend(_int_prog_after.errors_had[int_err_start:]);
+                new_warnings.extend(_int_prog_after.warnings_had[int_warn_start:]);
+            }
             # Filter out errors/warnings from ignored files and non-.jac files
             # By default, only show errors from .jac files (not from Python stdlib, stubs, etc.)
             # TODO: This is ad-hoc, need proper error handling across
@@ -484,7 +495,22 @@ def _iter_jac_files(paths: list, ignore_list: list = []) -> tuple[list[str], boo
     for path in paths {
         path_obj = Path(path);
         if path.endswith('.jac') {
-            if not _should_ignore(path, ignore_list) {
+            # Fix 1a: redirect annex files (.impl.jac / .test.jac) to their parent module
+            # instead of compiling them standalone (which would miss all type errors).
+            if path.endswith('.impl.jac') or path.endswith('.test.jac') {
+                import from jaclang.jac0core.bccache { discover_base_file }
+                parent_path = discover_base_file(path);
+                if parent_path {
+                    if not _should_ignore(parent_path, ignore_list)
+                    and parent_path not in result {
+                        result.append(parent_path);
+                    }
+                } else {
+                    console.warning(
+                        f"Could not find parent module for annex file '{path}'; skipping."
+                    );
+                }
+            } elif not _should_ignore(path, ignore_list) {
                 result.append(path);
             }
         } elif path_obj.is_dir() {
@@ -492,8 +518,15 @@ def _iter_jac_files(paths: list, ignore_list: list = []) -> tuple[list[str], boo
                 if not jac_file.is_file() {
                     continue;
                 }
-                if not _should_ignore(str(jac_file), ignore_list) {
-                    result.append(str(jac_file));
+                # Fix 1b: skip .impl.jac / .test.jac in directory traversal — they are
+                # already type-checked as part of their parent module's compilation.
+                jac_file_str = str(jac_file);
+                if jac_file_str.endswith('.impl.jac')
+                or jac_file_str.endswith('.test.jac') {
+                    continue;
+                }
+                if not _should_ignore(jac_file_str, ignore_list) {
+                    result.append(jac_file_str);
                 }
             }
         } else {
