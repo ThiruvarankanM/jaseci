@@ -168,15 +168,7 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
         and isinstance(nd.value, uni.FuncCall) {
             # Check if it's a TypeVar call by checking the caller type
             caller_type = self.evaluator.get_type_of_expression(nd.value.target);
-            is_typevar_call = (
-                isinstance(caller_type, types.ClassType)
-                and self.evaluator.prefetch
-                and self.evaluator.prefetch.type_var_class
-                and isinstance(
-                    self.evaluator.prefetch.type_var_class, types.ClassType
-                )
-                and caller_type.shared == self.evaluator.prefetch.type_var_class.shared
-            );
+            is_typevar_call = self.evaluator.is_typevar_class(caller_type);
             if is_typevar_call {
                 # Validation 1: TypeVar cannot be assigned to index expression
                 # e.g., my_dict["var"] = TypeVar("T5") is an error
