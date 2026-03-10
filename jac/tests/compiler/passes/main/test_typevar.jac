@@ -35,3 +35,19 @@ test "typevar1_validation_errors" {
     assert 'must be assigned to a simple variable' in all_errors , "Expected index expression error for my_dict['var'] = TypeVar('T5')";
     assert 'requires at least two constrained types' in all_errors , "Expected single constraint error for TypeVar('T5', str)";
 }
+
+
+"""Test TypeVar scope validation errors (Pyright: typeVar3.py)."""
+test "typevar3_scope_errors" {
+    program = JacProgram();
+    mod = program.compile(os.path.join(TYPEVAR_FIXTURES, "typeVar3.jac"));
+    TypeCheckPass(ir_in=mod, prog=program);
+
+    assert len(program.errors_had) == 12 , f"Expected 12 TypeVar scope errors, got {len(program.errors_had)}";
+
+    error_messages = [e.pretty_print() for e in program.errors_had];
+    all_errors = "\n".join(error_messages);
+
+    assert 'is already in use by an outer scope' in all_errors , "Expected error for nested class reusing outer TypeVar (e.g. InnerClass1 reuses _T)";
+    assert 'has no meaning in this context' in all_errors , "Expected error for TypeVar used outside its valid scope";
+}
