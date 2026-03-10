@@ -43,7 +43,9 @@ test "typevar3_scope_errors" {
     mod = program.compile(os.path.join(TYPEVAR_FIXTURES, "typeVar3.jac"));
     TypeCheckPass(ir_in=mod, prog=program);
 
-    assert len(program.errors_had) == 12 , f"Expected 12 TypeVar scope errors, got {len(program.errors_had)}";
+    assert len(program.errors_had) == 12 , f"Expected 12 TypeVar scope errors, got {len(
+        program.errors_had
+    )}";
 
     error_messages = [e.pretty_print() for e in program.errors_had];
     all_errors = "\n".join(error_messages);

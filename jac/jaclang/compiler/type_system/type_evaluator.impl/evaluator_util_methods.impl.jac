@@ -332,14 +332,14 @@ impl TypeEvaluator._set_module_item_symbol_and_type(
     return node_.name.type;
 }
 
+"""Extract TypeVar parameters from Generic[] base class.
+
+Pyright: Also validates that TypeVars aren't already in use by outer scopes.
+This is declaration-site validation, separate from use-site validation.
+"""
 impl TypeEvaluator._extract_type_params(
     node_: uni.Archetype
 ) -> list[types.TypeVarType] {
-    """Extract TypeVar parameters from Generic[] base class.
-
-    Pyright: Also validates that TypeVars aren't already in use by outer scopes.
-    This is declaration-site validation, separate from use-site validation.
-    """
     type_params: list[types.TypeVarType] = [];
 
     # Handle Jac-native generic syntax: obj Box[T], obj Pair[A, B]
@@ -679,7 +679,6 @@ impl TypeEvaluator._create_special_builtin_type(
 # -------------------------------------------------------------------------
 # TypeVar scope validation (Pyright: validateTypeVarUsage)
 # -------------------------------------------------------------------------
-
 """Get TypeVar parameters from the IMMEDIATE enclosing class only.
 
 Unlike _get_enclosing_class_type_params which walked all parent classes,
@@ -826,12 +825,12 @@ impl TypeEvaluator.validate_typevar_scope(
         for tp in func_type_params {
             if tp.name == type_var.name {
                 return;  # Valid: TypeVar used in function signature
+
             }
         }
         # TypeVar not in scope for this function
         self.add_diagnostic(
-            expr,
-            f'Type variable "{type_var.name}" has no meaning in this context'
+            expr, f'Type variable "{type_var.name}" has no meaning in this context'
         );
         return;
     }
@@ -842,20 +841,19 @@ impl TypeEvaluator.validate_typevar_scope(
         for tp in class_type_params {
             if tp.name == type_var.name {
                 return;  # Valid: TypeVar declared in this class
+
             }
         }
         # TypeVar not declared in this class
         self.add_diagnostic(
-            expr,
-            f'Type variable "{type_var.name}" has no meaning in this context'
+            expr, f'Type variable "{type_var.name}" has no meaning in this context'
         );
         return;
     }
 
     # Case 3: At module level (not in class or function)
     self.add_diagnostic(
-        expr,
-        f'Type variable "{type_var.name}" has no meaning in this context'
+        expr, f'Type variable "{type_var.name}" has no meaning in this context'
     );
 }
 
