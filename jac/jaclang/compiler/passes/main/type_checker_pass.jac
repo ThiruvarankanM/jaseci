@@ -10,7 +10,6 @@ Reference:
 """
 import jaclang.jac0core.unitree as uni;
 import from jaclang.jac0core.passes { UniPass }
-import from jaclang.compiler.type_system { types }
 
 """Type checker pass for JacLang."""
 class TypeCheckPass(UniPass) {

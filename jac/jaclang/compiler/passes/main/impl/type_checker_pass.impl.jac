@@ -128,6 +128,7 @@ impl TypeCheckPass.exit_atom_trailer(self: TypeCheckPass, nd: uni.AtomTrailer) -
 
 """Pyright: Checker.visitAssignment(node: AssignmentNode): boolean."""
 impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> None {
+    import from jaclang.compiler.type_system { types }
     if ((len(nd.target) == 1) and (nd.value is not None)) {
         target = nd.target[0];
         # For assignment targets, use the declared symbol type (not the
@@ -203,6 +204,7 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
         }
         # Validate augmented assignment operator (+=, -=, etc.)
         if nd.aug_op is not None {
+            import from jaclang.compiler.type_system { types }
             import from jaclang.compiler.type_system.operations {
                 AUG_OPERATOR_MAP,
                 AUG_TO_BINARY_MAP,
@@ -305,6 +307,7 @@ impl TypeCheckPass.enter_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
 
 """Exit an ability node - ensure parameter type annotations are evaluated and check return completeness."""
 impl TypeCheckPass.exit_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
+    import from jaclang.compiler.type_system { types }
     # For abilities with ImplDef body (stubs linked to impl files), the original declaration's
     # type annotation Name nodes are orphaned (not in the traversal tree). We need to explicitly
     # process them to enable hover/go-to-definition on the declaration file.
@@ -539,6 +542,7 @@ impl TypeCheckPass.exit_has_var(self: TypeCheckPass, nd: uni.HasVar) -> None {
 
 """Set type on for loop iteration variable and check iterability."""
 impl TypeCheckPass.exit_in_for_stmt(self: TypeCheckPass, nd: uni.InForStmt) -> None {
+    import from jaclang.compiler.type_system { types }
     # Cache type on the iteration target (e.g., 'coord' in 'for coord in p')
     if isinstance(nd.target, uni.Name) {
         self.evaluator.get_type_of_expression(nd.target);
@@ -569,6 +573,7 @@ impl TypeCheckPass.exit_in_for_stmt(self: TypeCheckPass, nd: uni.InForStmt) -> N
 
 """Type-check raise statements — ensure raised value is an exception."""
 impl TypeCheckPass.exit_raise_stmt(self: TypeCheckPass, nd: uni.RaiseStmt) -> None {
+    import from jaclang.compiler.type_system { types }
     if nd.cause {
         cause_type = self.evaluator.get_type_of_expression(nd.cause);
         if isinstance(cause_type, types.ClassType)
@@ -592,6 +597,7 @@ impl TypeCheckPass.exit_raise_stmt(self: TypeCheckPass, nd: uni.RaiseStmt) -> No
 
 """Type-check with statements — verify context manager protocol."""
 impl TypeCheckPass.exit_with_stmt(self: TypeCheckPass, nd: uni.WithStmt) -> None {
+    import from jaclang.compiler.type_system { types }
     for item in nd.exprs {
         expr_type = self.evaluator.get_type_of_expression(item.expr);
         if not isinstance(expr_type, types.UnknownType) {
@@ -652,6 +658,7 @@ impl TypeCheckPass.exit_assert_stmt(self: TypeCheckPass, nd: uni.AssertStmt) -> 
 
 """Type-check yield expressions against enclosing function's return type."""
 impl TypeCheckPass.exit_yield_expr(self: TypeCheckPass, nd: uni.YieldExpr) -> None {
+    import from jaclang.compiler.type_system { types }
     if nd.expr is None {
         return;
     }
@@ -686,6 +693,7 @@ impl TypeCheckPass.exit_delete_stmt(self: TypeCheckPass, nd: uni.DeleteStmt) -> 
 
 """Type-check visit statement target expression — must be a node type."""
 impl TypeCheckPass.exit_visit_stmt(self: TypeCheckPass, nd: uni.VisitStmt) -> None {
+    import from jaclang.compiler.type_system { types }
     target_type = self.evaluator.get_type_of_expression(nd.target);
     # Validate the visit target is a node (or unknown/any which we can't check)
     if (
