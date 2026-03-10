@@ -861,7 +861,8 @@ class ParamKind(IntEnum) {
 obj ParamVar(AstSymbolNode, AstTypedVarNode) {
     has name: Name,
         unpack: (Token | None),
-        value: (Expr | None);
+        value: (Expr | None),
+        type: (TypeBase | None) = None;
 
     def postinit -> None;
     @property
@@ -884,7 +885,8 @@ obj ArchHas(AstAccessNode, AstDocNode, ArchBlockStmt, CodeBlockStmt) {
 obj HasVar(AstSymbolNode, AstTypedVarNode) {
     has name: Name,
         value: (Expr | None),
-        defer: bool;
+        defer: bool,
+        type: (TypeBase | None) = None;
 
     def postinit -> None;
 }

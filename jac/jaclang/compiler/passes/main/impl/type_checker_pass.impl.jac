@@ -61,7 +61,9 @@ impl TypeCheckPass.exit_return_stmt(self: TypeCheckPass, nd: uni.ReturnStmt) -> 
             );
             return;
         }
-        fn_type = self.evaluator.get_type_of_ability(fn);
+        import from jaclang.compiler.type_system { types }
+        fn_type_base = self.evaluator.get_type_of_ability(fn);
+        fn_type: types.FunctionType = fn_type_base;
         return_type = self.evaluator._convert_to_instance(fn_type.return_type);
         if not self.evaluator.assign_type(returning_type, return_type) {
             self.log_error(
@@ -84,9 +86,11 @@ impl TypeCheckPass.exit_func_call(self: TypeCheckPass, nd: uni.FuncCall) -> None
     # Pyright: Type variable "T" has no meaning in this context
     if isinstance(nd.target, uni.AtomTrailer) and not nd.target.is_attr {
         if isinstance(nd.target.right, uni.IndexSlice) {
-            for slice in nd.target.right.slices {
-                if slice.start {
-                    self.evaluator.validate_typevar_in_type_expr(slice.start);
+            idx_slice: uni.IndexSlice = nd.target.right;
+            for slice in idx_slice.slices {
+                slice_item: uni.IndexSlice.Slice = slice;
+                if slice_item.start {
+                    self.evaluator.validate_typevar_in_type_expr(slice_item.start);
                 }
             }
         }
@@ -193,10 +197,11 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
                 } else {
                     # Validation 2: TypeVar name must match the variable name
                     # e.g., T2 = TypeVar("T3") is an error
-                    if target.value != right_type.name {
+                    name_target: uni.Name = target;
+                    if name_target.value != right_type.name {
                         self.log_error(
-                            f'TypeVar name "{right_type.name}" must match the assigned variable name "{target.value}"',
-                            target
+                            f'TypeVar name "{right_type.name}" must match the assigned variable name "{name_target.value}"',
+                            name_target
                         );
                     }
                 }
@@ -320,7 +325,8 @@ impl TypeCheckPass.exit_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
         ability_end_line = nd.loc.last_line;
         # Find orphaned Name nodes in type annotations at this ability's location
         if module := nd.find_parent_of_type(uni.Module) {
-            for mod_nd in module._in_mod_nodes {
+            mod: uni.Module = module;
+            for mod_nd in mod._in_mod_nodes {
                 if (
                     isinstance(mod_nd, uni.Name)
                     and mod_nd.sym is None
@@ -416,7 +422,8 @@ impl TypeCheckPass._body_always_returns(
             if stmt.cases {
                 all_cases_return = True;
                 for case in stmt.cases {
-                    if not self._body_always_returns(list(case.body)) {
+                    match_case: uni.MatchCase = case;
+                    if not self._body_always_returns(list(match_case.body)) {
                         all_cases_return = False;
                         break;
                     }
@@ -431,10 +438,11 @@ impl TypeCheckPass._body_always_returns(
                 has_default = False;
                 all_cases_return = True;
                 for case in stmt.cases {
-                    if case.pattern is None {
+                    switch_case: uni.SwitchCase = case;
+                    if switch_case.pattern is None {
                         has_default = True;
                     }
-                    if not self._body_always_returns(list(case.body)) {
+                    if not self._body_always_returns(list(switch_case.body)) {
                         all_cases_return = False;
                     }
                 }
@@ -456,7 +464,8 @@ impl TypeCheckPass._body_always_returns(
                 }
                 all_excepts_return = True;
                 for exc in stmt.excepts {
-                    if not self._body_always_returns(list(exc.body)) {
+                    except_clause: uni.Except = exc;
+                    if not self._body_always_returns(list(except_clause.body)) {
                         all_excepts_return = False;
                         break;
                     }
@@ -603,10 +612,11 @@ impl TypeCheckPass.exit_raise_stmt(self: TypeCheckPass, nd: uni.RaiseStmt) -> No
 impl TypeCheckPass.exit_with_stmt(self: TypeCheckPass, nd: uni.WithStmt) -> None {
     import from jaclang.compiler.type_system { types }
     for item in nd.exprs {
-        expr_type = self.evaluator.get_type_of_expression(item.expr);
+        ctx_item: uni.ExprAsItem = item;
+        expr_type = self.evaluator.get_type_of_expression(ctx_item.expr);
         if not isinstance(expr_type, types.UnknownType) {
             enter_result = self.evaluator.get_type_of_magic_method_call(
-                expr_type, "__enter__", [], item.expr
+                expr_type, "__enter__", [], ctx_item.expr
             );
             if enter_result is None {
                 self.log_error(
@@ -638,9 +648,9 @@ impl TypeCheckPass.exit_with_stmt(self: TypeCheckPass, nd: uni.WithStmt) -> None
                 }
             }
             # Bind alias type from __enter__ return type
-            if item.alias is not None and enter_result is not None {
-                if isinstance(item.alias, uni.Name) and item.alias.sym {
-                    item.alias.type = enter_result;
+            if ctx_item.alias is not None and enter_result is not None {
+                if isinstance(ctx_item.alias, uni.Name) and ctx_item.alias.sym {
+                    ctx_item.alias.type = enter_result;
                 }
             }
         }
@@ -673,7 +683,8 @@ impl TypeCheckPass.exit_yield_expr(self: TypeCheckPass, nd: uni.YieldExpr) -> No
             and fn.signature.return_type is not None
         );
         if has_annotation {
-            fn_type = self.evaluator.get_type_of_ability(fn);
+            fn_type_base = self.evaluator.get_type_of_ability(fn);
+            fn_type: types.FunctionType = fn_type_base;
             return_type = self.evaluator._convert_to_instance(fn_type.return_type);
             if not isinstance(return_type, types.UnknownType) {
                 if not nd.with_from {
@@ -753,11 +764,13 @@ impl TypeCheckPass.exit_impl_def(self: TypeCheckPass, nd: uni.ImplDef) -> None {
     if not archetype {
         return;
     }
+    arch: uni.Archetype = archetype;
     # Collect by-postinit fields
     deferred_fields: dict[str, uni.HasVar] = {};
-    for hv in archetype.get_has_vars() {
-        if hv.defer {
-            deferred_fields[hv.name.value] = hv;
+    for has_var_node in arch.get_has_vars() {
+        has_var: uni.HasVar = has_var_node;
+        if has_var.defer {
+            deferred_fields[has_var.name.value] = has_var;
         }
     }
     if not deferred_fields {
@@ -766,13 +779,16 @@ impl TypeCheckPass.exit_impl_def(self: TypeCheckPass, nd: uni.ImplDef) -> None {
     # Scan for self.field = ... assignments in the impl body
     assigned: set[str] = set();
     for trailer in nd.get_all_sub_nodes(uni.AtomTrailer) {
-        if not (trailer.parent and isinstance(trailer.parent, uni.Assignment)) {
+        atom_trailer: uni.AtomTrailer = trailer;
+        if not (
+            atom_trailer.parent and isinstance(atom_trailer.parent, uni.Assignment)
+        ) {
             continue;
         }
-        if trailer != trailer.parent.target[0] {
+        if atom_trailer != atom_trailer.parent.target[0] {
             continue;
         }
-        chain = trailer.as_attr_list;
+        chain: list[uni.AstSymbolNode] = atom_trailer.as_attr_list;
         if len(chain) >= 2 and chain[0].sym_name == 'self' {
             assigned.add(chain[1].sym_name);
         }
@@ -782,7 +798,7 @@ impl TypeCheckPass.exit_impl_def(self: TypeCheckPass, nd: uni.ImplDef) -> None {
         if field_name not in assigned {
             self.log_error(
                 f"Field '{field_name}' declared 'by postinit' is never assigned "
-                f"in {archetype.name_spec.sym_name}.postinit",
+                f"in {arch.name_spec.sym_name}.postinit",
                 nd
             );
         }
