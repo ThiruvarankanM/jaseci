@@ -138,7 +138,6 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
             # Cache the type on the Name node for hover info
             target.type = left_type;
         } elif isinstance(target, (uni.TupleVal, uni.ListVal)) {
-            import from jaclang.compiler.type_system { types }
             # Tuple/list unpacking: (px, py) = p; or [a, b] = lst;
             # Individual element types are inferred by _eval_unpacking_names.
             # Skip whole-expression assign_type check since the LHS container
@@ -159,12 +158,51 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
             left_type = self.evaluator.get_type_of_expression(target);
         }
         right_type = self.evaluator.get_type_of_expression(nd.value);
+
+        # Pyright: assignTypeToExpression() - TypeVar assignment validation
+        # When RHS is a TypeVar() call, validate that:
+        # 1. Target is a simple Name (not index expression like my_dict["key"])
+        # 2. Target name matches the TypeVar name (T = TypeVar("T"), not T2 = TypeVar("T3"))
+        if isinstance(right_type, types.TypeVarType)
+        and isinstance(nd.value, uni.FuncCall) {
+            # Check if it's a TypeVar call by checking the caller type
+            caller_type = self.evaluator.get_type_of_expression(nd.value.target);
+            is_typevar_call = (
+                isinstance(caller_type, types.ClassType)
+                and self.evaluator.prefetch
+                and self.evaluator.prefetch.type_var_class
+                and isinstance(
+                    self.evaluator.prefetch.type_var_class, types.ClassType
+                )
+                and caller_type.shared == self.evaluator.prefetch.type_var_class.shared
+            );
+            if is_typevar_call {
+                # Validation 1: TypeVar cannot be assigned to index expression
+                # e.g., my_dict["var"] = TypeVar("T5") is an error
+                if not isinstance(target, uni.Name) {
+                    self.log_error(
+                        f'TypeVar "{right_type.name}" must be assigned to a simple variable, '
+                        f'not an index or member expression',
+                        target
+                    );
+                } else {
+                    # Validation 2: TypeVar name must match the variable name
+                    # e.g., T2 = TypeVar("T3") is an error
+                    if target.value != right_type.name {
+                        self.log_error(
+                            f'TypeVar name "{right_type.name}" must match the assigned variable name "{target.value}"',
+                            target
+                        );
+                    }
+                }
+            }
+        }
+
         if not self.evaluator.assign_type(right_type, left_type) {
             self.log_error(f"Cannot assign {right_type} to {left_type}");
         }
         # Validate augmented assignment operator (+=, -=, etc.)
         if nd.aug_op is not None {
-            import from jaclang.compiler.type_system { types }
             import from jaclang.compiler.type_system.operations {
                 AUG_OPERATOR_MAP,
                 AUG_TO_BINARY_MAP,
@@ -267,7 +305,6 @@ impl TypeCheckPass.enter_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
 
 """Exit an ability node - ensure parameter type annotations are evaluated and check return completeness."""
 impl TypeCheckPass.exit_ability(self: TypeCheckPass, nd: uni.Ability) -> None {
-    import from jaclang.compiler.type_system { types }
     # For abilities with ImplDef body (stubs linked to impl files), the original declaration's
     # type annotation Name nodes are orphaned (not in the traversal tree). We need to explicitly
     # process them to enable hover/go-to-definition on the declaration file.
@@ -502,7 +539,6 @@ impl TypeCheckPass.exit_has_var(self: TypeCheckPass, nd: uni.HasVar) -> None {
 
 """Set type on for loop iteration variable and check iterability."""
 impl TypeCheckPass.exit_in_for_stmt(self: TypeCheckPass, nd: uni.InForStmt) -> None {
-    import from jaclang.compiler.type_system { types }
     # Cache type on the iteration target (e.g., 'coord' in 'for coord in p')
     if isinstance(nd.target, uni.Name) {
         self.evaluator.get_type_of_expression(nd.target);
@@ -533,7 +569,6 @@ impl TypeCheckPass.exit_in_for_stmt(self: TypeCheckPass, nd: uni.InForStmt) -> N
 
 """Type-check raise statements — ensure raised value is an exception."""
 impl TypeCheckPass.exit_raise_stmt(self: TypeCheckPass, nd: uni.RaiseStmt) -> None {
-    import from jaclang.compiler.type_system { types }
     if nd.cause {
         cause_type = self.evaluator.get_type_of_expression(nd.cause);
         if isinstance(cause_type, types.ClassType)
@@ -557,7 +592,6 @@ impl TypeCheckPass.exit_raise_stmt(self: TypeCheckPass, nd: uni.RaiseStmt) -> No
 
 """Type-check with statements — verify context manager protocol."""
 impl TypeCheckPass.exit_with_stmt(self: TypeCheckPass, nd: uni.WithStmt) -> None {
-    import from jaclang.compiler.type_system { types }
     for item in nd.exprs {
         expr_type = self.evaluator.get_type_of_expression(item.expr);
         if not isinstance(expr_type, types.UnknownType) {
@@ -618,7 +652,6 @@ impl TypeCheckPass.exit_assert_stmt(self: TypeCheckPass, nd: uni.AssertStmt) -> 
 
 """Type-check yield expressions against enclosing function's return type."""
 impl TypeCheckPass.exit_yield_expr(self: TypeCheckPass, nd: uni.YieldExpr) -> None {
-    import from jaclang.compiler.type_system { types }
     if nd.expr is None {
         return;
     }
@@ -653,7 +686,6 @@ impl TypeCheckPass.exit_delete_stmt(self: TypeCheckPass, nd: uni.DeleteStmt) -> 
 
 """Type-check visit statement target expression — must be a node type."""
 impl TypeCheckPass.exit_visit_stmt(self: TypeCheckPass, nd: uni.VisitStmt) -> None {
-    import from jaclang.compiler.type_system { types }
     target_type = self.evaluator.get_type_of_expression(nd.target);
     # Validate the visit target is a node (or unknown/any which we can't check)
     if (
