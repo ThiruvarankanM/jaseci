@@ -208,7 +208,14 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
             }
         }
 
-        if not self.evaluator.assign_type(right_type, left_type) {
+        # Augmented assignment TypeVar check (Pyright: typeVar5)
+        # e.g., a += 3 where a is TypeVar is an error
+        if nd.aug_op and isinstance(left_type, types.TypeVarType) {
+            self.log_error(
+                f'Operator "{nd.aug_op.name}" not supported for type "{left_type.name}"',
+                nd
+            );
+        } elif not self.evaluator.assign_type(right_type, left_type) {
             self.log_error(f"Cannot assign {right_type} to {left_type}");
         }
         # Validate augmented assignment operator (+=, -=, etc.)
@@ -568,9 +575,12 @@ impl TypeCheckPass.exit_in_for_stmt(self: TypeCheckPass, nd: uni.InForStmt) -> N
     }
     # Check that the collection is iterable
     collection_type = self.evaluator.get_type_of_expression(nd.collection);
-    # Skip check for UnknownType and any-like types (Any, object, TypeVar)
-    # Following Pyright's pattern: these types are assumed to be iterable.
-    if not isinstance(collection_type, types.UnknownType)
+    # Check TypeVarType before is_any_type() — TypeVars are any-like but still not iterable.
+    if isinstance(collection_type, types.TypeVarType) {
+        self.log_error(f'Type "{collection_type.name}" is not iterable', nd);
+        # Skip check for UnknownType and any-like types (Any, object)
+        # Following Pyright's pattern: these types are assumed to be iterable.
+    } elif not isinstance(collection_type, types.UnknownType)
     and not collection_type.is_any_type() {
         # Enum classes are iterable via EnumMeta.__iter__ which is not in the
         # Jac type system's MRO. Skip the __iter__ check for enum classes.
