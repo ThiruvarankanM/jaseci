@@ -68,10 +68,7 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
                     return types.UnknownType();
                 }
                 # Bound type is not callable (no __call__ method)
-                self.add_diagnostic(
-                    expr,
-                    f'Type "{bound_type}" is not callable'
-                );
+                self.add_diagnostic(expr, f'Type "{bound_type}" is not callable');
                 return types.UnknownType();
             }
         }
