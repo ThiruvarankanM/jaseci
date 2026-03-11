@@ -113,3 +113,22 @@ test "typevar5_unbounded_operations" {
     # Iteration errors
     assert 'Type "_T1" is not iterable' in all_errors , "Expected iteration error for for _ in a";
 }
+
+"""Test bounded TypeVar operation validation (Pyright: typeVar6)."""
+test "typevar6_bounded_operations" {
+    program = JacProgram();
+    mod = program.compile(os.path.join(TYPEVAR_FIXTURES, "typeVar6.jac"));
+    TypeCheckPass(ir_in=mod, prog=program);
+
+    error_messages = [e.pretty_print() for e in program.errors_had];
+    all_errors = "\n".join(error_messages);
+
+    # func1 (_T1, bound=Foo): var2 missing, wrong call arg type, no subscript,
+    # no binary op, no unary op, no aug-assign, no await, no iter, no do_other_stuff
+    # = 9 errors
+    assert 'Cannot access attribute "var2"' in all_errors , "Expected attribute error for a.var2 (Foo has no var2)";
+    assert 'is not subscriptable' in all_errors , "Expected subscript error for a[0]";
+    assert 'is not awaitable' in all_errors , "Expected await error for await a";
+    assert 'is not iterable' in all_errors , "Expected iteration error for for _ in a";
+    assert 'Cannot access attribute "do_other_stuff"' in all_errors , "Expected error for a.do_other_stuff() on Foo-bounded T1";
+}

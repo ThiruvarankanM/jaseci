@@ -208,13 +208,37 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
             }
         }
 
-        # Augmented assignment TypeVar check (Pyright: typeVar5)
-        # e.g., a += 3 where a is TypeVar is an error
+        # Augmented assignment TypeVar check (Pyright: typeVar5/6)
+        # e.g., a += 3 where a is TypeVar is an error (unless bound supports it)
         if nd.aug_op and isinstance(left_type, types.TypeVarType) {
-            self.log_error(
-                f'Operator "{nd.aug_op.name}" not supported for type "{left_type.name}"',
-                nd
-            );
+            if left_type.bound and isinstance(left_type.bound, types.ClassType) {
+                # Bounded TypeVar - check if bound supports __iadd__ (etc)
+                # Use operations module to check via magic method lookup
+                import from jaclang.compiler.type_system { operations }
+                op_name = operations.AUG_OPERATOR_MAP.get(nd.aug_op.name);
+                if op_name {
+                    result = self.evaluator.get_type_of_magic_method_call(
+                        left_type.bound, op_name, [nd.value], nd
+                    );
+                    if result is None {
+                        self.log_error(
+                            f'Operator "{nd.aug_op.name}" not supported for type "{left_type.bound}"',
+                            nd
+                        );
+                    }
+                } else {
+                    self.log_error(
+                        f'Operator "{nd.aug_op.name}" not supported for type "{left_type.bound}"',
+                        nd
+                    );
+                }
+            } else {
+                # Unbounded TypeVar
+                self.log_error(
+                    f'Operator "{nd.aug_op.name}" not supported for type "{left_type.name}"',
+                    nd
+                );
+            }
         } elif not self.evaluator.assign_type(right_type, left_type) {
             self.log_error(f"Cannot assign {right_type} to {left_type}");
         }
@@ -575,9 +599,21 @@ impl TypeCheckPass.exit_in_for_stmt(self: TypeCheckPass, nd: uni.InForStmt) -> N
     }
     # Check that the collection is iterable
     collection_type = self.evaluator.get_type_of_expression(nd.collection);
-    # Check TypeVarType before is_any_type() — TypeVars are any-like but still not iterable.
+    # Check TypeVarType before is_any_type() — TypeVars are any-like but still need special handling.
     if isinstance(collection_type, types.TypeVarType) {
-        self.log_error(f'Type "{collection_type.name}" is not iterable', nd);
+        if collection_type.bound
+        and isinstance(collection_type.bound, types.ClassType) {
+            # Bounded TypeVar - check if bound type has __iter__
+            iter_result = self.evaluator.get_type_of_magic_method_call(
+                collection_type.bound, "__iter__", [], nd.collection
+            );
+            if iter_result is None {
+                self.log_error(f'Type "{collection_type.bound}" is not iterable', nd);
+            }
+        } else {
+            # Unbounded TypeVar - not iterable
+            self.log_error(f'Type "{collection_type.name}" is not iterable', nd);
+        }
         # Skip check for UnknownType and any-like types (Any, object)
         # Following Pyright's pattern: these types are assumed to be iterable.
     } elif not isinstance(collection_type, types.UnknownType)
