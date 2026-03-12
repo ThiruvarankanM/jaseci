@@ -671,7 +671,6 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                                         found_member = member;
                                     }
                                 } else {
-                                    # Attribute not found on this constraint type
                                     self.add_diagnostic(
                                         expr,
                                         "Cannot access attribute \"" + attr_name + "\" for type \"" + str(constraint_type) + "\""
@@ -922,15 +921,26 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                 if isinstance(base_type, types.TypeVarType) {
                     # Constrained TypeVar - check all constraint types
                     if base_type.constraints {
-                        any_subscriptable = False;
+                        # Extract inner expression from IndexSlice before __getitem__ lookup,
+                        # mirroring the regular subscript path. Without this, IndexSlice
+                        # evaluates to Unknown making typed builtins (e.g. str) falsely
+                        # report as not subscriptable.
+                        subscript_arg_tv: uni.Expr = expr.right;
+                        if (
+                            isinstance(expr.right, uni.IndexSlice)
+                            and not expr.right.is_range
+                            and expr.right.slices
+                        ) {
+                            subscript_arg_tv = expr.right.slices[0].start;
+                        }
+                        had_error = False;
                         for constraint_type in base_type.constraints {
                             if isinstance(constraint_type, types.ClassType) {
                                 result = self.get_type_of_magic_method_call(
-                                    constraint_type, "__getitem__", [expr.right], None
+                                    constraint_type, "__getitem__", [subscript_arg_tv], None
                                 );
-                                if result {
-                                    any_subscriptable = True;
-                                } else {
+                                if not result {
+                                    had_error = True;
                                     self.add_diagnostic(
                                         expr,
                                         f'Type "{constraint_type}" is not subscriptable'
@@ -938,7 +948,7 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                                 }
                             }
                         }
-                        return types.UnknownType();
+                        return types.UnknownType() if had_error else base_type;
                     }
                     if base_type.bound {
                         # Bounded TypeVar - use bound type for __getitem__ lookup
@@ -995,12 +1005,14 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
             if isinstance(target_type, types.TypeVarType) {
                 # Constrained TypeVar - check all constraint types
                 if target_type.constraints {
+                    had_error = False;
                     for constraint_type in target_type.constraints {
                         if isinstance(constraint_type, types.ClassType) {
                             result = self.get_type_of_magic_method_call(
                                 constraint_type, "__await__", [], None
                             );
                             if not result {
+                                had_error = True;
                                 self.add_diagnostic(
                                     expr,
                                     f'Type "{constraint_type}" is not awaitable'
@@ -1008,7 +1020,7 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                             }
                         }
                     }
-                    return types.UnknownType();
+                    return types.UnknownType() if had_error else target_type;
                 }
                 if target_type.bound
                 and isinstance(target_type.bound, types.ClassType) {
@@ -1101,12 +1113,14 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                     if isinstance(operand_type, types.TypeVarType) {
                         # Constrained TypeVar - check all constraint types
                         if operand_type.constraints {
+                            had_error = False;
                             for constraint_type in operand_type.constraints {
                                 if isinstance(constraint_type, types.ClassType) {
                                     result = self.get_type_of_magic_method_call(
                                         constraint_type, op_name, [], None
                                     );
                                     if not result {
+                                        had_error = True;
                                         self.add_diagnostic(
                                             expr,
                                             f'Operator "{op_name}" not supported for type "{constraint_type}"'
@@ -1114,7 +1128,7 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                                     }
                                 }
                             }
-                            return types.UnknownType();
+                            return types.UnknownType() if had_error else operand_type;
                         }
                         if operand_type.bound
                         and isinstance(operand_type.bound, types.ClassType) {

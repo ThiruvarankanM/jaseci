@@ -210,47 +210,74 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
 
         # Augmented assignment TypeVar check (Pyright: typeVar5/6/7)
         # e.g., a += 3 where a is TypeVar is an error (unless bound/constraints support it)
+        # Falls back to the binary op (e.g. __add__ for +=) if __iadd__ is absent —
+        # matching Python's runtime fallback and Pyright's semantics.
         if nd.aug_op and isinstance(left_type, types.TypeVarType) {
             import from jaclang.compiler.type_system { operations }
             op_name = operations.get_augmented_op_magic(nd.aug_op.name);
-            # Constrained TypeVar - check all constraint types
-            if left_type.constraints {
-                for constraint_type in left_type.constraints {
-                    if isinstance(constraint_type, types.ClassType) {
-                        result = self.evaluator.get_type_of_magic_method_call(
-                            constraint_type, op_name, [nd.value], None
-                        );
-                        if result is None {
-                            self.log_error(
-                                f'Operator "{nd.aug_op.name}" not supported for type "{constraint_type}"',
-                                nd
-                            );
-                        }
+            if op_name {
+                # Pre-compute the binary fallback magic (e.g. '__add__' for '+=').
+                # Mirrors Python's runtime rule: try __iadd__ first, fall back to __add__.
+                # Computed once here so the per-constraint loop doesn't repeat the lookup.
+                aug_fallback_magic: str | None = None;
+                aug_binary_tok = operations.AUG_TO_BINARY_MAP.get(nd.aug_op.name);
+                if aug_binary_tok is not None {
+                    aug_binary_methods = operations.BINARY_OPERATOR_MAP.get(aug_binary_tok);
+                    if aug_binary_methods is not None {
+                        (aug_fallback_magic, _) = aug_binary_methods;
                     }
                 }
-            } elif left_type.bound and isinstance(left_type.bound, types.ClassType) {
-                # Bounded TypeVar - check if bound supports __iadd__ (etc)
-                result = self.evaluator.get_type_of_magic_method_call(
-                    left_type.bound, op_name, [nd.value], nd
-                );
-                if result is None {
+                # Constrained TypeVar - check each constraint type independently
+                if left_type.constraints {
+                    for constraint_type in left_type.constraints {
+                        if isinstance(constraint_type, types.ClassType) {
+                            result = self.evaluator.get_type_of_magic_method_call(
+                                constraint_type, op_name, [nd.value], None
+                            );
+                            if result is None and aug_fallback_magic is not None {
+                                result = self.evaluator.get_type_of_magic_method_call(
+                                    constraint_type, aug_fallback_magic, [nd.value], None
+                                );
+                            }
+                            if result is None {
+                                self.log_error(
+                                    f'Operator "{nd.aug_op.name}" not supported for type "{constraint_type}"',
+                                    nd
+                                );
+                            }
+                        }
+                    }
+                } elif left_type.bound and isinstance(left_type.bound, types.ClassType) {
+                    # Bounded TypeVar - same two-step fallback against the bound type
+                    result = self.evaluator.get_type_of_magic_method_call(
+                        left_type.bound, op_name, [nd.value], None
+                    );
+                    if result is None and aug_fallback_magic is not None {
+                        result = self.evaluator.get_type_of_magic_method_call(
+                            left_type.bound, aug_fallback_magic, [nd.value], None
+                        );
+                    }
+                    if result is None {
+                        self.log_error(
+                            f'Operator "{nd.aug_op.name}" not supported for type "{left_type.bound}"',
+                            nd
+                        );
+                    }
+                } else {
+                    # Unbounded TypeVar - no bound/constraints to fall back on
                     self.log_error(
-                        f'Operator "{nd.aug_op.name}" not supported for type "{left_type.bound}"',
+                        f'Operator "{nd.aug_op.name}" not supported for type "{left_type.name}"',
                         nd
                     );
                 }
-            } else {
-                # Unbounded TypeVar
-                self.log_error(
-                    f'Operator "{nd.aug_op.name}" not supported for type "{left_type.name}"',
-                    nd
-                );
             }
         } elif not self.evaluator.assign_type(right_type, left_type) {
             self.log_error(f"Cannot assign {right_type} to {left_type}");
         }
         # Validate augmented assignment operator (+=, -=, etc.)
-        if nd.aug_op is not None {
+        # Skip for TypeVar left-hand sides — already handled by the TypeVar-specific
+        # block above (which uses bound/constraint semantics instead of direct method lookup).
+        if nd.aug_op is not None and not isinstance(left_type, types.TypeVarType) {
             import from jaclang.compiler.type_system { types }
             import from jaclang.compiler.type_system.operations {
                 AUG_OPERATOR_MAP,

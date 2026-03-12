@@ -176,6 +176,7 @@ def get_type_of_binary_operation(
             (magic, rmagic) = BINARY_OPERATOR_MAP[expr.op.name];
             # Constrained TypeVar - check all constraint types
             if left_type.constraints {
+                had_constraint_error = False;
                 for constraint_type in left_type.constraints {
                     if isinstance(constraint_type, jtypes.ClassType) {
                         result = evaluator.get_type_of_magic_method_call(
@@ -186,8 +187,14 @@ def get_type_of_binary_operation(
                                 expr,
                                 f'Operator "{magic}" not supported for type "{constraint_type}"'
                             );
+                            had_constraint_error = True;
                         }
                     }
+                }
+                # When all constraints support the operation, return the TypeVar itself
+                # to avoid cascading "Cannot assign Unknown" false positives downstream.
+                if not had_constraint_error {
+                    return left_type;
                 }
                 return jtypes.UnknownType();
             }
@@ -206,7 +213,6 @@ def get_type_of_binary_operation(
                 return jtypes.UnknownType();
             }
             # Unbounded TypeVar
-            (magic, _) = BINARY_OPERATOR_MAP[expr.op.name];
             evaluator.add_diagnostic(
                 expr, f'Operator "{magic}" not supported for type "{left_type.name}"'
             );
@@ -216,6 +222,7 @@ def get_type_of_binary_operation(
             (magic, rmagic) = BINARY_OPERATOR_MAP[expr.op.name];
             # Constrained TypeVar - check all constraint types
             if right_type.constraints {
+                had_constraint_error = False;
                 for constraint_type in right_type.constraints {
                     if isinstance(constraint_type, jtypes.ClassType) {
                         result = evaluator.get_type_of_magic_method_call(
@@ -226,8 +233,12 @@ def get_type_of_binary_operation(
                                 expr,
                                 f'Operator "{rmagic}" not supported for type "{constraint_type}"'
                             );
+                            had_constraint_error = True;
                         }
                     }
+                }
+                if not had_constraint_error {
+                    return right_type;
                 }
                 return jtypes.UnknownType();
             }
