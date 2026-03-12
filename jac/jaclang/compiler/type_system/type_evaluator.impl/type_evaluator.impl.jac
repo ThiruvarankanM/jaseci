@@ -659,21 +659,23 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                     return types.UnknownType();
                 } elif isinstance(base_type, types.TypeVarType) {
                     attr_name = expr.right.value;
-
                     # Constrained TypeVar - check all constraint types (Pyright: typeVar7)
                     if base_type.constraints {
                         found_member: Any = None;
                         for constraint_type in base_type.constraints {
                             if isinstance(constraint_type, types.ClassType) {
-                                if member := self._lookup_object_member(constraint_type,
-                                attr_name) {
+                                if member := self._lookup_object_member(
+                                    constraint_type, attr_name
+                                ) {
                                     if found_member is None {
                                         found_member = member;
                                     }
                                 } else {
                                     self.add_diagnostic(
                                         expr,
-                                        "Cannot access attribute \"" + attr_name + "\" for type \"" + str(constraint_type) + "\""
+                                        "Cannot access attribute \"" + attr_name + "\" for type \"" + str(
+                                            constraint_type
+                                        ) + "\""
                                     );
                                 }
                             }
@@ -937,7 +939,10 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                         for constraint_type in base_type.constraints {
                             if isinstance(constraint_type, types.ClassType) {
                                 result = self.get_type_of_magic_method_call(
-                                    constraint_type, "__getitem__", [subscript_arg_tv], None
+                                    constraint_type,
+                                    "__getitem__",
+                                    [subscript_arg_tv],
+                                    None
                                 );
                                 if not result {
                                     had_error = True;
@@ -1014,8 +1019,7 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                             if not result {
                                 had_error = True;
                                 self.add_diagnostic(
-                                    expr,
-                                    f'Type "{constraint_type}" is not awaitable'
+                                    expr, f'Type "{constraint_type}" is not awaitable'
                                 );
                             }
                         }

@@ -43,8 +43,7 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
         if caller_type.constraints {
             for constraint_type in caller_type.constraints {
                 if isinstance(constraint_type, types.ClassType) {
-                    call_member = self._lookup_class_member(constraint_type,
-                    "__call__");
+                    call_member = self._lookup_class_member(constraint_type, "__call__");
                     if call_member {
                         # Validate call arguments against this constraint's __call__
                         call_type = self.get_type_of_symbol(call_member.symbol);
@@ -58,8 +57,7 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
                         }
                     } else {
                         self.add_diagnostic(
-                            expr,
-                            f'Type "{constraint_type}" is not callable'
+                            expr, f'Type "{constraint_type}" is not callable'
                         );
                     }
                 }
@@ -221,8 +219,8 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
                 }
                 # Collect constraint types (positional args after the name)
                 constraint_type = self.get_type_of_expression(arg);
-                if isinstance(constraint_type, types.ClassType) and
-                constraint_type.is_instantiable() {
+                if isinstance(constraint_type, types.ClassType)
+                and constraint_type.is_instantiable() {
                     constraint_type = constraint_type.clone_as_instance();
                 }
                 constraint_types.append(constraint_type);
@@ -250,7 +248,7 @@ impl TypeEvaluator.validate_call_args(expr: uni.FuncCall) -> TypeBase {
             is_covariant=is_covariant,
             is_contravariant=is_contravariant,
             bound=bound_type,
-            constraints=constraint_types if constraint_types else None
+            constraints=constraint_types
         );
     }
     if (

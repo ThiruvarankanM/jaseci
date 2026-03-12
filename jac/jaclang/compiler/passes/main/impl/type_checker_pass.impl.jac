@@ -222,7 +222,9 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
                 aug_fallback_magic: str | None = None;
                 aug_binary_tok = operations.AUG_TO_BINARY_MAP.get(nd.aug_op.name);
                 if aug_binary_tok is not None {
-                    aug_binary_methods = operations.BINARY_OPERATOR_MAP.get(aug_binary_tok);
+                    aug_binary_methods = operations.BINARY_OPERATOR_MAP.get(
+                        aug_binary_tok
+                    );
                     if aug_binary_methods is not None {
                         (aug_fallback_magic, _) = aug_binary_methods;
                     }
@@ -236,7 +238,10 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
                             );
                             if result is None and aug_fallback_magic is not None {
                                 result = self.evaluator.get_type_of_magic_method_call(
-                                    constraint_type, aug_fallback_magic, [nd.value], None
+                                    constraint_type,
+                                    aug_fallback_magic,
+                                    [nd.value],
+                                    None
                                 );
                             }
                             if result is None {
@@ -247,7 +252,8 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
                             }
                         }
                     }
-                } elif left_type.bound and isinstance(left_type.bound, types.ClassType) {
+                } elif left_type.bound
+                and isinstance(left_type.bound, types.ClassType) {
                     # Bounded TypeVar - same two-step fallback against the bound type
                     result = self.evaluator.get_type_of_magic_method_call(
                         left_type.bound, op_name, [nd.value], None
@@ -625,9 +631,7 @@ impl TypeCheckPass.exit_in_for_stmt(self: TypeCheckPass, nd: uni.InForStmt) -> N
                         constraint_type, "__iter__", [], None
                     );
                     if iter_result is None {
-                        self.log_error(
-                            f'Type "{constraint_type}" is not iterable', nd
-                        );
+                        self.log_error(f'Type "{constraint_type}" is not iterable', nd);
                     }
                 }
             }

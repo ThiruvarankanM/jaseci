@@ -160,7 +160,7 @@ test "typevar7_constrained_operations" {
     ];
 
     for pattern in expected_patterns {
-        assert pattern in all_errors, f"Expected error pattern not found: {pattern}";
+        assert pattern in all_errors , f"Expected error pattern not found: {pattern}";
     }
 
     # Verify aug-assignment fallback works correctly:
@@ -168,5 +168,5 @@ test "typevar7_constrained_operations" {
     # "a += 3" SHOULD error (int is not compatible with Foo/Bar/str's __add__).
     # The absence of spurious "ADD_EQ not supported" for same-type operands confirms
     # that the __iadd__ -> __add__ fallback is working.
-    assert len(program.errors_had) > 0, "Expected type errors for constrained TypeVar operations";
+    assert len(program.errors_had) > 0 , "Expected type errors for constrained TypeVar operations";
 }
