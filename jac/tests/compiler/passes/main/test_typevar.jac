@@ -132,3 +132,41 @@ test "typevar6_bounded_operations" {
     assert 'is not iterable' in all_errors , "Expected iteration error for for _ in a";
     assert 'Cannot access attribute "do_other_stuff"' in all_errors , "Expected error for a.do_other_stuff() on Foo-bounded T1";
 }
+
+"""Test constrained TypeVar operation validation (Pyright: typeVar7)."""
+test "typevar7_constrained_operations" {
+    program = JacProgram();
+    mod = program.compile(os.path.join(TYPEVAR_FIXTURES, "typeVar7.jac"));
+    TypeCheckPass(ir_in=mod, prog=program);
+
+    # 45 errors: one per constraint type that fails across all operations
+    assert len(program.errors_had) == 45 , f"Expected 45 errors, got {len(
+        program.errors_had
+    )}";
+
+    error_messages = [e.pretty_print() for e in program.errors_had];
+    all_errors = "\n".join(error_messages);
+
+    # Attribute access errors (Foo has no var2; str has no var2)
+    assert 'Cannot access attribute "var2" for type "<class Foo>"' in all_errors , "Expected attribute error for a.var2 on Foo-constrained T1";
+    assert 'Cannot access attribute "var2" for type "<class str>"' in all_errors , "Expected attribute error for a.var2 on str-constrained T2";
+
+    # Subscript errors (neither Foo nor Bar supports __getitem__)
+    assert 'Type "<class Foo>" is not subscriptable' in all_errors , "Expected subscript error for a[0] with Foo constraint";
+    assert 'Type "<class Bar>" is not subscriptable' in all_errors , "Expected subscript error for a[0] with Bar constraint";
+
+    # Unary operator errors (neither Foo nor Bar supports __neg__)
+    assert 'Operator "__neg__" not supported for type "<class Foo>"' in all_errors , "Expected unary neg error for -a with Foo constraint";
+    assert 'Operator "__neg__" not supported for type "<class Bar>"' in all_errors , "Expected unary neg error for -a with Bar constraint";
+
+    # Await errors (neither Foo nor Bar supports __await__)
+    assert 'Type "<class Foo>" is not awaitable' in all_errors , "Expected await error for await a with Foo constraint";
+    assert 'Type "<class Bar>" is not awaitable' in all_errors , "Expected await error for await a with Bar constraint";
+
+    # Iteration errors (neither Foo nor Bar supports __iter__)
+    assert 'Type "<class Foo>" is not iterable' in all_errors , "Expected iteration error for for _ in a with Foo constraint";
+    assert 'Type "<class Bar>" is not iterable' in all_errors , "Expected iteration error for for _ in a with Bar constraint";
+
+    # Call errors (str is not callable)
+    assert 'Type "<class str>" is not callable' in all_errors , "Expected callable error for a(3.3) with str constraint";
+}

@@ -660,6 +660,24 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                     return types.UnknownType();
                 } elif isinstance(base_type, types.TypeVarType) {
                     attr_name = expr.right.value;
+                    # Constrained TypeVar - check all constraint types (Pyright: typeVar7)
+                    if base_type.constraints {
+                        for constraint_type in base_type.constraints {
+                            if isinstance(constraint_type, types.ClassType) {
+                                if not self._lookup_object_member(
+                                    constraint_type, attr_name
+                                ) {
+                                    self.emit_diag(
+                                        E1031,
+                                        expr,
+                                        attr=attr_name,
+                                        type=str(constraint_type)
+                                    );
+                                }
+                            }
+                        }
+                        return types.UnknownType();
+                    }
                     # Bounded TypeVar - use bound type for attribute lookup (Pyright: typeVar6)
                     if base_type.bound {
                         bound_type = base_type.bound;
@@ -888,8 +906,27 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                     # TODO: Validate the slice type arguments.
                     return self.get_type_of_expression(expr.target);
                 }
-                # TypeVar subscript handling (Pyright: typeVar5/6)
+                # TypeVar subscript handling (Pyright: typeVar5/6/7)
                 if isinstance(base_type, types.TypeVarType) {
+                    # Constrained TypeVar - check all constraint types
+                    if base_type.constraints {
+                        any_subscriptable = False;
+                        for constraint_type in base_type.constraints {
+                            if isinstance(constraint_type, types.ClassType) {
+                                result = self.get_type_of_magic_method_call(
+                                    constraint_type, "__getitem__", [expr.right], None
+                                );
+                                if result {
+                                    any_subscriptable = True;
+                                } else {
+                                    self.emit_diag(
+                                        E1040, expr, type=str(constraint_type)
+                                    );
+                                }
+                            }
+                        }
+                        return types.UnknownType();
+                    }
                     if base_type.bound {
                         # Bounded TypeVar - use bound type for __getitem__ lookup
                         bound_type = base_type.bound;
@@ -937,8 +974,22 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
         case uni.AwaitExpr():
             # Evaluate the awaited expression
             target_type = self.get_type_of_expression(expr.target);
-            # TypeVar await handling (Pyright: typeVar5/6)
+            # TypeVar await handling (Pyright: typeVar5/6/7)
             if isinstance(target_type, types.TypeVarType) {
+                # Constrained TypeVar - check all constraint types
+                if target_type.constraints {
+                    for constraint_type in target_type.constraints {
+                        if isinstance(constraint_type, types.ClassType) {
+                            result = self.get_type_of_magic_method_call(
+                                constraint_type, "__await__", [], None
+                            );
+                            if not result {
+                                self.emit_diag(E1041, expr, type=str(constraint_type));
+                            }
+                        }
+                    }
+                    return types.UnknownType();
+                }
                 if target_type.bound
                 and isinstance(target_type.bound, types.ClassType) {
                     # Bounded TypeVar - check if bound type has __await__
@@ -1024,8 +1075,27 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                     # `-x`, `~x` -> type of operand
                     operand_type = self.get_type_of_expression(expr.operand);
                     op_name = "__neg__" if expr.op.name == Tok.MINUS else "__invert__";
-                    # TypeVar unary operation handling (Pyright: typeVar5/6)
+                    # TypeVar unary operation handling (Pyright: typeVar5/6/7)
                     if isinstance(operand_type, types.TypeVarType) {
+                        # Constrained TypeVar - check all constraint types
+                        if operand_type.constraints {
+                            for constraint_type in operand_type.constraints {
+                                if isinstance(constraint_type, types.ClassType) {
+                                    result = self.get_type_of_magic_method_call(
+                                        constraint_type, op_name, [], None
+                                    );
+                                    if not result {
+                                        self.emit_diag(
+                                            E1010,
+                                            expr,
+                                            op=op_name,
+                                            type=str(constraint_type)
+                                        );
+                                    }
+                                }
+                            }
+                            return types.UnknownType();
+                        }
                         if operand_type.bound
                         and isinstance(operand_type.bound, types.ClassType) {
                             # Bounded TypeVar - use bound type for magic method lookup

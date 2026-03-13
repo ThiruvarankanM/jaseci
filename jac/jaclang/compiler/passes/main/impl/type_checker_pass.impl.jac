@@ -207,14 +207,59 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
             }
         }
 
-        # Augmented assignment TypeVar check (Pyright: typeVar5/6)
-        # e.g., a += 3 where a is TypeVar is an error (unless bound supports it)
+        # Augmented assignment TypeVar check (Pyright: typeVar5/6/7)
+        # e.g., a += 3 where a is TypeVar is an error (unless bound/constraints support it)
         if nd.aug_op and isinstance(left_type, types.TypeVarType) {
-            if left_type.bound and isinstance(left_type.bound, types.ClassType) {
+            import from jaclang.compiler.type_system { operations }
+            op_name = operations.AUG_OPERATOR_MAP.get(nd.aug_op.name);
+            # Constrained TypeVar - every constraint type must support the operator
+            if left_type.constraints {
+                for constraint_type in left_type.constraints {
+                    if isinstance(constraint_type, types.ClassType) {
+                        if op_name {
+                            # Try in-place method first (e.g. __iadd__)
+                            result = self.evaluator.get_type_of_magic_method_call(
+                                constraint_type, op_name, [nd.value], None
+                            );
+                            # Fall back to binary method (e.g. __add__) per Python semantics
+                            if result is None {
+                                binary_op_tok = operations.AUG_TO_BINARY_MAP.get(
+                                    nd.aug_op.name
+                                );
+                                if binary_op_tok {
+                                    (binary_magic, _) = operations.BINARY_OPERATOR_MAP.get(
+                                        binary_op_tok, (None, None)
+                                    );
+                                    if binary_magic {
+                                        result = self.evaluator.get_type_of_magic_method_call(
+                                            constraint_type,
+                                            binary_magic,
+                                            [nd.value],
+                                            None
+                                        );
+                                    }
+                                }
+                            }
+                            if result is None {
+                                self.emit(
+                                    E1010,
+                                    node_override=nd,
+                                    op=nd.aug_op.name,
+                                    type=str(constraint_type)
+                                );
+                            }
+                        } else {
+                            self.emit(
+                                E1010,
+                                node_override=nd,
+                                op=nd.aug_op.name,
+                                type=str(constraint_type)
+                            );
+                        }
+                    }
+                }
+            } elif left_type.bound and isinstance(left_type.bound, types.ClassType) {
                 # Bounded TypeVar - check if bound supports __iadd__ (etc)
-                # Use operations module to check via magic method lookup
-                import from jaclang.compiler.type_system { operations }
-                op_name = operations.AUG_OPERATOR_MAP.get(nd.aug_op.name);
                 if op_name {
                     result = self.evaluator.get_type_of_magic_method_call(
                         left_type.bound, op_name, [nd.value], nd
@@ -236,7 +281,7 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
                     );
                 }
             } else {
-                # Unbounded TypeVar
+                # Unbounded and unconstrained TypeVar
                 self.emit(
                     E1010, node_override=nd, op=nd.aug_op.name, type=left_type.name
                 );
@@ -257,6 +302,7 @@ impl TypeCheckPass.exit_assignment(self: TypeCheckPass, nd: uni.Assignment) -> N
             if (
                 not isinstance(left_type, types.UnknownType)
                 and not isinstance(right_type, types.UnknownType)
+                and not isinstance(left_type, types.TypeVarType)
             ) {
                 aug_magic = AUG_OPERATOR_MAP.get(nd.aug_op.name);
                 if aug_magic is not None {
@@ -582,7 +628,19 @@ impl TypeCheckPass.exit_in_for_stmt(self: TypeCheckPass, nd: uni.InForStmt) -> N
     collection_type = self.evaluator.get_type_of_expression(nd.collection);
     # Check TypeVarType before is_any_type() — TypeVars are any-like but still need special handling.
     if isinstance(collection_type, types.TypeVarType) {
-        if collection_type.bound
+        if collection_type.constraints {
+            # Constrained TypeVar - check all constraint types (Pyright: typeVar7)
+            for constraint_type in collection_type.constraints {
+                if isinstance(constraint_type, types.ClassType) {
+                    iter_result = self.evaluator.get_type_of_magic_method_call(
+                        constraint_type, "__iter__", [], nd.collection
+                    );
+                    if iter_result is None {
+                        self.emit(E1021, node_override=nd, type=str(constraint_type));
+                    }
+                }
+            }
+        } elif collection_type.bound
         and isinstance(collection_type.bound, types.ClassType) {
             # Bounded TypeVar - check if bound type has __iter__
             iter_result = self.evaluator.get_type_of_magic_method_call(
