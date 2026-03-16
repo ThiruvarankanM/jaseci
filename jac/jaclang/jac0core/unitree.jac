@@ -97,6 +97,13 @@ obj UniNode {
 
 """Symbol."""
 obj Symbol {
+    has defn: list[NameAtom] by postinit,
+        uses: list[NameAtom] by postinit,
+        imported: bool by postinit,
+        access: SymbolAccess by postinit,
+        parent_tab: (UniScopeNode | None) by postinit,
+        semstr: str by postinit;
+
     def init(
         defn: NameAtom,
         access: SymbolAccess,
@@ -424,7 +431,10 @@ obj Module(AstDocNode, UniScopeNode) {
         source: Source,
         body: Sequence[ElementStmt | String | EmptyToken],
         terminals: list[Token],
-        stub_only: bool = False;
+        stub_only: bool = False,
+        impl_mod: list[Module] by postinit,
+        test_mod: list[Module] by postinit,
+        variant_mod: list[Module] by postinit;
 
     def postinit -> None;
     @property
