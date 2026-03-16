@@ -148,7 +148,7 @@ The **Jac Language Support** extension is published on both major extension mark
 
 In any of the IDEs above, installing is the same:
 
-1. Open the Extensions panel — `Ctrl+Shift+X` / `Cmd+Shift+X`
+1. Open the Extensions panel - `Ctrl+Shift+X` / `Cmd+Shift+X`
 2. Search **`jaclang`**
 3. Click **Install** on "Jac Language Support" by Jaseci Labs
 
@@ -157,7 +157,7 @@ In any of the IDEs above, installing is the same:
 For IDEs without marketplace access or for offline installs:
 
 1. Download the latest `.vsix` from [GitHub Releases](https://github.com/Jaseci-Labs/jac-vscode/releases/latest)
-2. Open the Command Palette — `Ctrl+Shift+P` / `Cmd+Shift+P`
+2. Open the Command Palette - `Ctrl+Shift+P` / `Cmd+Shift+P`
 3. Select **"Extensions: Install from VSIX..."**
 4. Choose the downloaded file
 
