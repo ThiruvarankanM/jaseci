@@ -139,6 +139,7 @@ The **Jac Language Support** extension is published on both major extension mark
 - [VS Code](https://code.visualstudio.com/)
 - [Cursor](https://www.cursor.com/)
 - [Windsurf](https://codeium.com/windsurf)
+- [Antigravity](https://antigravity.dev/)
 - [VSCodium](https://vscodium.com/)
 - [Gitpod](https://www.gitpod.io/)
 - [Eclipse Theia](https://theia-ide.org/)
