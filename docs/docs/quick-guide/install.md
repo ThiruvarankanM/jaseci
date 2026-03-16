@@ -127,7 +127,7 @@ pip install jaseci
 
 ## IDE Setup
 
-The **Jac Language Support** extension is published on both major extension marketplaces:
+The **Jac Language Support** extension is available on both major extension marketplaces:
 
 | Marketplace | Link |
 |-------------|------|
