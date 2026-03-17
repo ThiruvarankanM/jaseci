@@ -1138,8 +1138,7 @@ impl JacBasics.jac_import(
             # Route .py files through Jac's compiler pipeline
             if (spec.origin and spec.origin.endswith('.py')) {
                 codeobj = JacRuntime.get_compiler().get_bytecode(
-                    full_target=spec.origin,
-                    target_program=JacRuntime.get_program()
+                    full_target=spec.origin, target_program=JacRuntime.get_program()
                 );
                 if codeobj {
                     exec(codeobj, module.__dict__);
