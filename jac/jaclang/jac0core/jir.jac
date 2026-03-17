@@ -104,16 +104,9 @@ Strings are assigned sequential indices. The pool is serialized as:
 """
 class StringPool {
     def init(self: StringPool) -> None;
-    """Intern a string and return its pool index."""
     def intern(self: StringPool, s: str) -> int;
-
-    """Get string by pool index."""
     def get(self: StringPool, idx: int) -> str;
-
-    """Number of strings in pool."""
     def __len__(self: StringPool) -> int;
-
-    """Serialize the pool to bytes."""
     def serialize(self: StringPool) -> bytes;
 }
 
@@ -145,10 +138,7 @@ obj JirHeader {
         string_pool_size: int = 0,
         flags: int = 0;
 
-    """Serialize to 32 bytes."""
     def to_bytes(self: JirHeader) -> bytes;
-
-    """Quick validation: check magic, version, python version."""
     def is_compatible(self: JirHeader) -> bool;
 }
 
@@ -252,9 +242,45 @@ def get_stub_cache_path(stub_path: str, content_hash: str) -> Path {
     return cache_dir / f"{name}.{content_hash[:16]}.cpython-{major}{minor}.jir";
 }
 
+"""Get the cache directory for a module based on its origin.
+
+1. Source inside sys.prefix or jaclang package (installed/editable) → global cache
+2. Source inside active project root → project .jac/cache/
+3. Otherwise (standalone user file) → .jac/cache/ next to source
+"""
+glob _jaclang_pkg_dir: str = str(Path(__file__).resolve().parent.parent);
+
+def _get_module_cache_dir(source_path: str) -> Path {
+    resolved = Path(source_path).resolve();
+    resolved_str = str(resolved);
+    # Installed or editable-installed packages always use global cache
+    if resolved_str.startswith(_jaclang_pkg_dir + os.sep) {
+        return get_jir_cache_dir() / 'modules';
+    }
+    try {
+        resolved.relative_to(sys.prefix);
+        return get_jir_cache_dir() / 'modules';
+    } except ValueError { }
+    # Check for active project context
+    try {
+        config_mod = __import__("jaclang.project.config", fromlist=["get_config"]);
+        cfg = config_mod.get_config();
+        if cfg is not None and cfg.is_valid() and cfg.project_root is not None {
+            try {
+                resolved.relative_to(cfg.project_root);
+                return cfg.get_cache_dir();
+            } except ValueError { }
+            # Source is outside project — use global cache
+            return get_jir_cache_dir() / 'modules';
+        }
+    } except Exception { }
+    # No project context — use .jac/cache/ next to source
+    return resolved.parent / ".jac" / "cache";
+}
+
 """Get the cache path for a user module."""
 def get_module_cache_path(source_path: str) -> Path {
-    cache_dir = get_jir_cache_dir() / 'modules';
+    cache_dir = _get_module_cache_dir(source_path);
     source = Path(source_path).resolve();
     path_hash = hashlib.sha256(str(source).encode()).hexdigest()[:8];
     (major, minor) = (sys.version_info.major, sys.version_info.minor);

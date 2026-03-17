@@ -22,6 +22,79 @@ test "server creation with custom config" {
     assert server.host == "0.0.0.0";
 }
 
+test "streamable-http transport initializes session manager and app" {
+    import from mcp.server { Server }
+    import from mcp.server.streamable_http_manager { StreamableHTTPSessionManager }
+    import from starlette.applications { Starlette }
+    import from starlette.routing { Mount }
+    import contextlib;
+
+    server = Server("test-server");
+    session_manager = StreamableHTTPSessionManager(
+        app=server, json_response=True, stateless=False
+    );
+    assert session_manager is not None;
+
+    @contextlib.asynccontextmanager
+    async def lifespan(app: object) -> object {
+        async with session_manager.run() {
+            yield ;
+        }
+    }
+
+    starlette_app = Starlette(
+        lifespan=lifespan, routes=[Mount("/mcp", app=session_manager.handle_request)]
+    );
+    assert starlette_app is not None;
+    assert starlette_app.routes[0].path == "/mcp";
+}
+
+test "sse _async_start builds correct Mount-based route for messages" {
+    import from unittest.mock { patch, AsyncMock, MagicMock }
+    import from jac_mcp.server { JacMcpServer }
+    import from starlette.routing { Mount, Route }
+
+    captured_apps: list = [];
+
+    def fake_config(app: object, **kwargs: object) -> object {
+        captured_apps.append(app);
+        return MagicMock();
+    }
+
+    mock_serve = AsyncMock();
+    mock_server_instance = MagicMock();
+    mock_server_instance.serve = mock_serve;
+    mock_server_class = MagicMock();
+    mock_server_class.return_value = mock_server_instance;
+
+    mock_config_class = MagicMock();
+    mock_config_class.side_effect = fake_config;
+
+    # Pass mocks as positional arg (maps to patch's 'new' parameter)
+    with patch("uvicorn.Config", mock_config_class) {
+        with patch("uvicorn.Server", mock_server_class) {
+            JacMcpServer(transport="sse", port=3001, host="127.0.0.1").start();
+        }
+    }
+
+    assert len(captured_apps) == 1 , "uvicorn.Config should have been called once";
+    app: object = captured_apps[0];
+    routes: list = getattr(app, "routes");
+    assert len(routes) >= 2;
+
+    sse_route: object = routes[0];
+    messages_route: object = routes[1];
+    assert isinstance(sse_route, Route) , f"Expected Route for /sse, got {type(
+        sse_route
+    )}";
+    assert getattr(sse_route, "path") == "/sse";
+    assert isinstance(messages_route, Mount) , (
+        f"Expected Mount for /messages (handle_post_message is an ASGI app, "
+        f"not a Starlette endpoint — use Mount not Route). Got {type(messages_route)}"
+    );
+    assert getattr(messages_route, "path") == "/messages";
+}
+
 # ── Plugin Config Tests ──
 test "get plugin metadata" {
     metadata = JacMcpPluginConfig.get_plugin_metadata();
@@ -227,6 +300,15 @@ test "parse valid code" {
     assert isinstance(result, dict);
     assert "valid" in result;
     assert "errors" in result;
+    assert result["valid"] == True;
+    assert len(result["errors"]) == 0;
+}
+
+test "parse invalid code" {
+    result = CompilerBridge.parse_snippet("this is not valid @@@ !!!");
+    assert isinstance(result, dict);
+    assert result["valid"] == False;
+    assert len(result["errors"]) > 0;
 }
 
 test "parse empty code" {
@@ -240,6 +322,30 @@ test "input size limit" {
     assert result["valid"] == False;
     assert len(result["errors"]) > 0;
     assert "size" in result["errors"][0]["message"].lower();
+}
+
+test "get ast tree format" {
+    result = CompilerBridge.get_ast_snippet("obj Foo { has x: int = 5; }", "tree");
+    assert isinstance(result, dict);
+    assert result.get("ast") is not None;
+    assert result.get("valid") == True;
+    assert "Foo" in result["ast"];
+}
+
+test "get ast json format" {
+    result = CompilerBridge.get_ast_snippet("obj Foo { has x: int = 5; }", "json");
+    assert isinstance(result, dict);
+    assert result.get("ast") is not None;
+    assert result.get("valid") == True;
+    assert "Module" in result["ast"];
+}
+
+test "get ast invalid code" {
+    result = CompilerBridge.get_ast_snippet("this is not valid @@@ !!!", "tree");
+    assert isinstance(result, dict);
+    assert result.get("ast") is not None;
+    assert result.get("valid") == False;
+    assert len(result.get("errors", [])) > 0;
 }
 
 test "format valid code" {
@@ -350,8 +456,8 @@ test "unknown prompt returns error" {
 }
 
 # ── Bundle Script Tests ──
+"""Verify every DOC_MAPPINGS entry points to a real file in docs/."""
 test "all doc mapping source files exist" {
-    """Verify every DOC_MAPPINGS entry points to a real file in docs/."""
     import from jac_mcp.resources { find_repo_root, DOC_MAPPINGS }
     import from pathlib { Path }
 
@@ -372,8 +478,8 @@ test "all doc mapping source files exist" {
     assert len(missing) == 0 , f"Missing doc files: {missing}";
 }
 
+"""Verify the bundle_docs.jac script exits 0."""
 test "bundle script runs successfully" {
-    """Verify the bundle_docs.jac script exits 0."""
     import subprocess;
     import from pathlib { Path }
     import from jac_mcp.resources { find_repo_root }
@@ -392,8 +498,8 @@ test "bundle script runs successfully" {
     assert result.returncode == 0 , f"bundle_docs.jac failed:\n{result.stdout}\n{result.stderr}";
 }
 
+"""Verify no two DOC_MAPPINGS entries share the same bundled filename."""
 test "doc mappings have unique bundled names" {
-    """Verify no two DOC_MAPPINGS entries share the same bundled filename."""
     import from jac_mcp.resources { DOC_MAPPINGS }
 
     seen: dict[str, str] = {};

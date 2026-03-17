@@ -53,10 +53,26 @@ obj KubernetesMongoProvider(DatabaseProvider) {
                 'template': {
                     'metadata': {'labels': {'app': mongodb_name}},
                     'spec': {
+                        'automountServiceAccountToken': False,
+                        'serviceAccountName': f"{mongodb_name}-sa",
+                        'securityContext': {
+                            'runAsNonRoot': True,
+                            'runAsUser': 999,
+                            'fsGroup': 999,
+                            'seccompProfile': {'type': 'RuntimeDefault'}
+                        },
                         'containers': [
                             {
                                 'name': 'mongodb',
                                 'image': 'mongo:6.0',
+                                'securityContext': {
+                                    'runAsNonRoot': True,
+                                    'runAsUser': 999,
+                                    'readOnlyRootFilesystem': True,
+                                    'allowPrivilegeEscalation': False,
+                                    'capabilities': {'drop': ['ALL']},
+                                    'seccompProfile': {'type': 'RuntimeDefault'}
+                                },
                                 'ports': [{'containerPort': mongodb_port}],
                                 'env': [
                                     {
@@ -82,9 +98,18 @@ obj KubernetesMongoProvider(DatabaseProvider) {
                                     {
                                         'name': mongodb_volume_name,
                                         'mountPath': '/data/db'
+                                    },
+                                    {'name': 'tmp', 'mountPath': '/tmp'},
+                                    {
+                                        'name': 'mongo-run',
+                                        'mountPath': '/var/run/mongodb'
                                     }
                                 ]
                             }
+                        ],
+                        'volumes': [
+                            {'name': 'tmp', 'emptyDir': {}},
+                            {'name': 'mongo-run', 'emptyDir': {}}
                         ]
                     }
                 },
@@ -120,12 +145,23 @@ obj KubernetesMongoProvider(DatabaseProvider) {
             }
         };
 
+        mongodb_service_account = {
+            'apiVersion': 'v1',
+            'kind': 'ServiceAccount',
+            'metadata': {
+                'name': f"{mongodb_name}-sa",
+                'labels': {'app': mongodb_name, 'managed': 'jac-scale'}
+            },
+            'automountServiceAccountToken': False
+        };
+
         self.connection_string = connection_string;
 
         return {
             'secret': mongodb_secret,
             'deployment': mongodb_statefulset,
             'service': mongodb_service,
+            'service_account': mongodb_service_account,
             'connection_string': self.connection_string,
             'secret_name': mongodb_secret_name,
             'service_name': mongodb_service_name
@@ -159,6 +195,13 @@ obj KubernetesMongoProvider(DatabaseProvider) {
         return {
             'name': 'wait-for-mongodb',
             'image': wait_image,
+            'securityContext': {
+                'runAsNonRoot': True,
+                'runAsUser': 1000,
+                'readOnlyRootFilesystem': True,
+                'allowPrivilegeEscalation': False,
+                'capabilities': {'drop': ['ALL']}
+            },
             'command': [
                 'sh',
                 '-c',
@@ -173,14 +216,22 @@ obj KubernetesMongoProvider(DatabaseProvider) {
     Follows the same pattern as deploy(): pure spec construction, no API calls.
     """
     def deploy_dashboard(
-        cluster_env: str,
-        node_port: int,
-        username: str = 'admin',
-        password: str = 'admin'
+        username: str = 'admin', password: str = 'admin'
     ) -> dict[str, Any] {
         mongodb_service_name = f"{self.app_name}-mongodb-service";
         mongodb_secret_name = f"{self.app_name}-mongodb-secret";
         express_name = f"{self.app_name}-mongo-express";
+
+        express_sa_name = f"{express_name}-sa";
+        express_service_account = {
+            'apiVersion': 'v1',
+            'kind': 'ServiceAccount',
+            'metadata': {
+                'name': express_sa_name,
+                'labels': {'app': express_name, 'managed': 'jac-scale'}
+            },
+            'automountServiceAccountToken': False
+        };
 
         express_deployment = {
             'apiVersion': 'apps/v1',
@@ -195,10 +246,23 @@ obj KubernetesMongoProvider(DatabaseProvider) {
                 'template': {
                     'metadata': {'labels': {'app': express_name}},
                     'spec': {
+                        'automountServiceAccountToken': False,
+                        'serviceAccountName': express_sa_name,
+                        'securityContext': {
+                            'seccompProfile': {'type': 'RuntimeDefault'}
+                        },
                         'containers': [
                             {
                                 'name': 'mongo-express',
                                 'image': 'mongo-express:1.0.2-20',
+                                'securityContext': {
+                                    'runAsNonRoot': True,
+                                    'runAsUser': 1000,
+                                    'readOnlyRootFilesystem': True,
+                                    'allowPrivilegeEscalation': False,
+                                    'capabilities': {'drop': ['ALL']},
+                                    'seccompProfile': {'type': 'RuntimeDefault'}
+                                },
                                 'ports': [{'containerPort': 8081}],
                                 'env': [
                                     {
@@ -235,63 +299,44 @@ obj KubernetesMongoProvider(DatabaseProvider) {
                                     {
                                         'name': 'ME_CONFIG_BASICAUTH_PASSWORD',
                                         'value': password
+                                    },
+                                    {
+                                        'name': 'ME_CONFIG_SITE_BASEURL',
+                                        'value': '/db-dashboard/'
                                     }
                                 ],
                                 'resources': {
                                     'requests': {'cpu': '100m', 'memory': '128Mi'},
                                     'limits': {'cpu': '500m', 'memory': '256Mi'}
-                                }
+                                },
+                                'volumeMounts': [{'name': 'tmp', 'mountPath': '/tmp'}]
                             }
-                        ]
+                        ],
+                        'volumes': [{'name': 'tmp', 'emptyDir': {}}]
                     }
                 }
             }
         };
 
-        if cluster_env == 'aws' {
-            express_service = {
-                'apiVersion': 'v1',
-                'kind': 'Service',
-                'metadata': {
-                    'name': f"{express_name}-service",
-                    'labels': {'app': express_name, 'managed': 'jac-scale'},
-                    'annotations': {
-                        'service.beta.kubernetes.io/aws-load-balancer-type': 'nlb',
-                        'service.beta.kubernetes.io/aws-load-balancer-scheme': 'internet-facing'
-                    }
-                },
-                'spec': {
-                    'type': 'LoadBalancer',
-                    'selector': {'app': express_name},
-                    'ports': [{'protocol': 'TCP', 'port': 80, 'targetPort': 8081}]
-                }
-            };
-        } else {
-            express_service = {
-                'apiVersion': 'v1',
-                'kind': 'Service',
-                'metadata': {
-                    'name': f"{express_name}-service",
-                    'labels': {'app': express_name, 'managed': 'jac-scale'}
-                },
-                'spec': {
-                    'type': 'NodePort',
-                    'selector': {'app': express_name},
-                    'ports': [
-                        {
-                            'protocol': 'TCP',
-                            'port': 8081,
-                            'targetPort': 8081,
-                            'nodePort': node_port
-                        }
-                    ]
-                }
-            };
-        }
+        # Service: always ClusterIP — exposed via NGINX Ingress at /db-dashboard
+        express_service = {
+            'apiVersion': 'v1',
+            'kind': 'Service',
+            'metadata': {
+                'name': f"{express_name}-service",
+                'labels': {'app': express_name, 'managed': 'jac-scale'}
+            },
+            'spec': {
+                'type': 'ClusterIP',
+                'selector': {'app': express_name},
+                'ports': [{'protocol': 'TCP', 'port': 8081, 'targetPort': 8081}]
+            }
+        };
 
         return {
             'deployment': express_deployment,
             'service': express_service,
+            'service_account': express_service_account,
             'deployment_name': express_name,
             'service_name': f"{express_name}-service"
         };
