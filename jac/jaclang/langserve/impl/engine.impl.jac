@@ -342,8 +342,9 @@ impl JacLangServer.get_definition(
             try {
                 idx = `list(parent.path).index(node_selected);
                 path_list = parent.resolve_relative_path_list();
-                if idx < len(path_list) {
-                    resolved = path_list[idx];
+                resolved_idx = parent.level + idx;
+                if resolved_idx < len(path_list) {
+                    resolved = path_list[resolved_idx];
                     if Path(resolved).exists() {
                         return make_module_location(resolved);
                     }
