@@ -916,6 +916,27 @@ test "test_jir_cache_invalidated_on_version_mismatch" {
     }
 }
 
+test "test_rel_import_impl_goto_def_and_sem_token" {
+    import from jaclang.jac0core.constant { JacSemTokenType }
+    setup_test();
+    try {
+        lsp = create_server();
+        impl_file = uris.from_fs_path(fixture_path("rel_import_impl.impl.jac"));
+        lsp.type_check_file(impl_file);
+
+        # sem token on 'feature' (line 10, col 12) proves server type resolved (not UnknownType).
+        tok = lsp.get_token_at_position(impl_file, lspt.Position(9, 11));
+        assert tok is not None , "Expected token for 'feature' in impl body";
+        tok_sem = tok.sem_token;
+        assert tok_sem is not None , "sem_token for 'feature' is None";
+        assert tok_sem[0] == JacSemTokenType.METHOD , (
+            f"Expected METHOD sem token for 'feature', got: {tok_sem[0]}"
+        );
+    } finally {
+        teardown_test();
+    }
+}
+
 test "test_cross_module_imported_func_sem_token" {
     import from jaclang.jac0core.constant { JacSemTokenType }
     setup_test();

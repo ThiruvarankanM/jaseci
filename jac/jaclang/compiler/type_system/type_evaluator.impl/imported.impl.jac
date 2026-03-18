@@ -100,7 +100,7 @@ impl TypeEvaluator.get_type_of_module(node_: uni.ModulePath) -> types.TypeBase {
         }
         path_list = node_.resolve_relative_path_list();
         for (idx, npath) in enumerate(node_.path) {
-            mod_path = path_list[idx];
+            mod_path = path_list[node_.level + idx];
 
             if mod_path in self._module_type_cache {
                 npath.type = self._module_type_cache[mod_path];
