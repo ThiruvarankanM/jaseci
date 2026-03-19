@@ -2826,9 +2826,6 @@ impl TypeEvaluator.init(program: "JacProgram") -> None {
     self._narrowing_in_progress: set[int] = set();
     # Cache for module types by resolved path to avoid redundant lookups.
     self._module_type_cache: dict[str, types.ModuleType] = {};
-    # Holds symtab-only modules separately so program.mod.hub stays
-    # fully-compiled-only (bundle builder relies on this assumption).
-    self._symtab_only_hub: dict[str, uni.Module] = {};
     # NOTE: The initialization order here is important.
     self.typing_module = self._load_stub_module(self._TYPING_STUB_FILE_PATH);
     self.types_module = self._load_stub_module(self._TYPES_STUB_FILE_PATH);
