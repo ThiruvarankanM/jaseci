@@ -172,6 +172,9 @@ impl TypeEvaluator._import_module_from_path(path: str) -> uni.Module {
         mod = self.program.mod.hub[resolved_path];
     } elif resolved_path in target_hub {
         mod = target_hub[resolved_path];
+    } elif resolved_path in self._symtab_only_hub {
+        # Previously compiled symtab-only module — reuse without touching program.mod.hub.
+        mod = self._symtab_only_hub[resolved_path];
     } else {
         # Try JIR cache first for .jac files
         jir_mod: (uni.Module | None) = None;
@@ -183,16 +186,19 @@ impl TypeEvaluator._import_module_from_path(path: str) -> uni.Module {
             if mod.parent_scope is None and mod is not self.builtins_module {
                 mod.parent_scope = self.builtins_module;
             }
-            target_hub[resolved_path] = mod;
+            # Use _symtab_only_hub so program.mod.hub stays reserved for
+            # fully-compiled modules (those that carry generated JS code).
+            self._symtab_only_hub[resolved_path] = mod;
         } else {
-            # Cache miss — full compile
+            # Cache miss — symtab-only compile (no code generation).
             mod = self.program.compile(
                 path, no_cgen=True, type_check=False, symtab_ir_only=True
             );
             if mod.parent_scope is None and mod is not self.builtins_module {
                 mod.parent_scope = self.builtins_module;
             }
-            target_hub[resolved_path] = mod;
+            # Store in symtab-only cache, not program.mod.hub (bundle builder only).
+            self._symtab_only_hub[resolved_path] = mod;
             # Write JIR module cache for .jac files (best-effort).
             # Only write if no valid cache exists yet — symtab-only compiles
             # lack bytecode and must not overwrite a full cache that has it.

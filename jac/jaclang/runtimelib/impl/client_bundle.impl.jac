@@ -232,10 +232,10 @@ impl ClientBundleBuilder._compile_to_js(source_path: Path) -> tuple[str, Module]
     source_key = str(source_path);
     if (source_key in program.mod.hub) {
         mod = program.mod.hub[source_key];
-        # If no JS (symtab-only compile), fall through to recompile.
         if mod.gen.js {
             return (mod.gen.js, mod);
         }
+        # Module is in hub without JS (symtab-only). Fall through to full recompile.
     }
     # Save current error count so we only check for NEW errors from this compile.
     prev_error_count = len(program.errors_had);
