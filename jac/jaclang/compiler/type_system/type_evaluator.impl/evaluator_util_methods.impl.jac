@@ -497,10 +497,8 @@ impl TypeEvaluator._set_module_item_symbol_and_type(
     node_: uni.ModuleItem, sym: uni.Symbol
 ) -> TypeBase {
     node_.name.sym = sym;
-    node_.name._sym_category = sym.sym_type;
     if node_.alias {
         node_.alias.sym = sym;
-        node_.alias._sym_category = sym.sym_type;
     }
     node_.name.type = self.get_type_of_symbol(sym);
     return node_.name.type;
