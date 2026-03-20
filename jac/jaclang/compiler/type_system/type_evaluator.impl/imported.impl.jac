@@ -126,11 +126,6 @@ impl TypeEvaluator.get_type_of_module(node_: uni.ModulePath) -> types.TypeBase {
                 npath._sym_category = SymbolType.MODULE;
                 continue;
             }
-            # JS/TS files cannot be parsed by the JAC compiler — return UnknownType.
-            if any(mod_path.endswith(ext) for ext in ('.js', '.ts', '.jsx', '.tsx')) {
-                npath.type = types.UnknownType();
-                return npath.type;
-            }
             mod: uni.Module = self._import_module_from_path(mod_path);
             flags = type_utils.compute_module_source_flags(mod_path);
             mod_type = types.ModuleType(
