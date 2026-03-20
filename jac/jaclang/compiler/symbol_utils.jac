@@ -32,12 +32,7 @@ def resolve_expr_symbol(
 ) -> (uni.Symbol | None) {
     # Direct symbol node
     if isinstance(expr, uni.AstSymbolNode) and expr.sym {
-        sym = expr.sym;
-        # Follow decl.sym chain if TypeEvaluator resolved the import to the original symbol.
-        if (sym.imported and sym.decl and sym.decl.sym and (sym.decl.sym is not sym)) {
-            return sym.decl.sym;
-        }
-        return sym;
+        return expr.sym;
     }
     # Dotted attribute access chain
     if isinstance(expr, uni.AtomTrailer) {
