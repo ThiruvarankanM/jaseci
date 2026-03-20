@@ -61,6 +61,13 @@ optimized code on cache reload. Includes a platform header:
 """
 glob SEC_NATIVE_OBJ: int = 0x06;
 
+"""Section type: varint-encoded (node_id, str_pool_idx) pairs for Expr.backend_type_tag.
+
+Format: [count: varint] + repeat([node_id: varint] [str_pool_idx: varint])
+Only Expr nodes with non-None backend_type_tag are stored.
+"""
+glob SEC_TYPE_TAGS: int = 0x07;
+
 """Section terminator byte."""
 glob SEC_TERMINATOR: int = 0xFF;
 
@@ -138,8 +145,8 @@ obj JirHeader {
         string_pool_size: int = 0,
         flags: int = 0;
 
-    def to_bytes(self: JirHeader) -> bytes;
-    def is_compatible(self: JirHeader) -> bool;
+    def to_bytes -> bytes;
+    def is_compatible -> bool;
 }
 
 """Create a JirHeader for the current environment."""
