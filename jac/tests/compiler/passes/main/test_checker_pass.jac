@@ -110,6 +110,39 @@ test "bug_in_walker_ability" {
     assert len(program.errors_had) == 0;
 }
 
+test "return_value_in_ability_warns" {
+    program = JacProgram();
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_return_in_ability.jac"), options=NO_TC
+    );
+    TypeCheckPass(ir_in=mod, prog=program);
+    assert len(program.errors_had) == 0;
+    w2014_warnings = [
+        w
+        for w in program.warnings_had
+        if w.code and w.code.code == "W2014"
+    ];
+    assert len(w2014_warnings) == 2 , f"Expected 2 W2014 warnings, got {len(
+        w2014_warnings
+    )}: {w2014_warnings}";
+}
+
+test "explicit_self_in_archetype_errors" {
+    program = JacProgram();
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_explicit_self.jac"), options=NO_TC
+    );
+    TypeCheckPass(ir_in=mod, prog=program);
+    e2015_errors = [
+        e
+        for e in program.errors_had
+        if e.code and e.code.code == "E2015"
+    ];
+    # 4 errors: one each for obj, node, edge, walker bad_method
+    # No errors for: good_method (no self), static_method (static), PyClass methods (class)
+    assert len(e2015_errors) == 4 , f"Expected 4 E2015 errors, got {len(e2015_errors)}: {e2015_errors}";
+}
+
 test "member_access_type_resolve" {
     program = JacProgram();
     mod = program.compile(
@@ -1343,6 +1376,31 @@ test "property_type_checking" {
     );
 }
 
+test "property_self_return_type_resolution" {
+    program = JacProgram();
+    mod = program.compile(
+        os.path.join(CHECKER_FIXTURES, "checker_property_self_return.jac"),
+        options=NO_TC
+    );
+    TypeCheckPass(ir_in=mod, prog=program);
+    # Only 2 errors: assigning Path to int
+    assert len(program.errors_had) == 2;
+
+    assert_error_pretty_found(
+        """
+        wrong: int = p.parent;  # <-- Error (Path assigned to int)
+    """,
+        program.errors_had[0].pretty_print()
+    );
+
+    assert_error_pretty_found(
+        """
+        wrong_chained: int = p.parent.parent;  # <-- Error (Path assigned to int)
+    """,
+        program.errors_had[1].pretty_print()
+    );
+}
+
 test "type_narrowing" {
     program = JacProgram();
     mod = program.compile(
@@ -1523,12 +1581,12 @@ test "enum_type_checking" {
     TypeCheckPass(ir_in=mod, prog=program);
 
     expected_errors = [
+        "B = \"jac\"",
         "name_err: int = Color.RED.name",
         "value_err: str = Color.BLUE.value",
         "value_status_val_err: int = Status.ACTIVE.value",
         "auto_val_err: str = AutoValueTest.THIRD.value",
         "impl_shape_name_err: int = ShapeType.SQUARE.name",
-        "impl_shape_ok: str = ShapeType.SQUARE.name",
         "func_wrong_type: str = process_color"
     ];
 
@@ -1553,8 +1611,11 @@ test "class_based_enum_type_checking" {
     TypeCheckPass(ir_in=mod, prog=program);
 
     expected_errors = [
-        "Cannot assign Literal[\"1\"] to Tokens",
+        "Cannot assign <Tokens.FLOAT> to int",
         "Cannot assign Literal[\"1\"] to int",
+        "Cannot assign Literal[\"LSQUARE\"] to int",
+        "Cannot assign Literal[\"RSQUARE\"] to int",
+        "Cannot assign <AccessLevel.READ> to str",
         "Cannot assign AccessLevel | NoneType to int",
         "Cannot assign int to str"
     ];
@@ -1825,10 +1886,14 @@ test "assert_isinstance_narrowing" {
     );
     TypeCheckPass(ir_in=mod, prog=program);
 
-    # All cases should pass - assert isinstance narrows the type
-    assert len(program.errors_had) == 0 , f"Expected no type errors, but got " + f"{len(
+    # Expect exactly 1 error: the failure case where truthy assert doesn't narrow union
+    assert len(program.errors_had) == 1 , f"Expected 1 type error (truthy assert failure case), but got " + f"{len(
         program.errors_had
     )}:\n" + "\n---\n".join(err.pretty_print() for err in program.errors_had);
+
+    # Verify the error is about accessing .value on a string literal type
+    err_msg = program.errors_had[0].pretty_print();
+    assert 'has no attribute "value"' in err_msg , f"Expected attribute error, got: {err_msg}";
 }
 
 """Test assignment-based type narrowing."""
@@ -2190,6 +2255,30 @@ test "isinstance_ternary_narrowing" {
 test "list_generator_type_inference" {
     program = JacProgram();
     path = os.path.join(CHECKER_FIXTURES, "checker_list_generator_inference.jac");
+    mod = program.compile(path, options=NO_TC);
+    TypeCheckPass(ir_in=mod, prog=program);
+    assert len(program.errors_had) == 0 , f"Expected 0 type errors, got {len(
+        program.errors_had
+    )}:\n" + "\n".join(e.pretty_print() for e in program.errors_had);
+}
+
+"""Test that return inside lambda checks against lambda's return type, not enclosing function's."""
+test "bug_lambda_return_type_checks_against_enclosing_function" {
+    program = JacProgram();
+    path = os.path.join(CHECKER_FIXTURES, "checker_bug_lambda_return_type.jac");
+    mod = program.compile(path, options=NO_TC);
+    TypeCheckPass(ir_in=mod, prog=program);
+    # Case 1 and 2 should pass (valid returns), Case 3 should produce exactly 1 error
+    # (str returned from lambda declared -> int).
+    assert len(program.errors_had) == 1 , f"Expected 1 type error (lambda return mismatch), got {len(
+        program.errors_had
+    )}:\n" + "\n".join(e.pretty_print() for e in program.errors_had);
+}
+
+"""Test function type attribute access (__code__, __name__, etc.)."""
+test "function_type_attrs" {
+    program = JacProgram();
+    path = os.path.join(CHECKER_FIXTURES, "checker_function_attrs.jac");
     mod = program.compile(path, options=NO_TC);
     TypeCheckPass(ir_in=mod, prog=program);
     assert len(program.errors_had) == 0 , f"Expected 0 type errors, got {len(
