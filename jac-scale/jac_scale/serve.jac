@@ -78,7 +78,7 @@ def _find_available_port(start_port: int, max_retries: int = PORT_RETRY_LIMIT) -
 def _get_network_ips -> list[str];
 
 """Auth endpoints: register, login, token refresh, update password, SSO, API keys."""
-obj JacAPIServerAuth {
+obj JacAPIServerAuth(JServer) {
     def register_auth_endpoints -> None;
     # Registration & Login
     def register_register_endpoint -> None;
@@ -121,7 +121,7 @@ obj JacAPIServerEmailer {
 }
 
 """Core server lifecycle: start/postinit, health, HMR, scheduler, metrics."""
-obj JacAPIServerCore {
+obj JacAPIServerCore(JServer) {
     def postinit -> None;
     def start(
         dev: bool = False,
@@ -148,7 +148,7 @@ obj JacAPIServerCore {
 }
 
 """Walker, function, webhook, WebSocket endpoint registration and callbacks."""
-obj JacAPIServerEndpoints {
+obj JacAPIServerEndpoints(JServer) {
     # Walker endpoints
     def register_walkers_endpoints -> None;
     def create_walker_callback(
@@ -181,7 +181,7 @@ obj JacAPIServerEndpoints {
 }
 
 """Scheduler job management REST API endpoints."""
-obj JacAPIServerScheduler {
+obj JacAPIServerScheduler(JServer) {
     def register_scheduler_endpoints -> None;
     def create_job_callback -> Callable[..., TransportResponse];
     def list_jobs_callback -> Callable[..., TransportResponse];
@@ -191,7 +191,7 @@ obj JacAPIServerScheduler {
 }
 
 """Static files, pages, client JS, graph visualization."""
-obj JacAPIServerStatic {
+obj JacAPIServerStatic(JServer) {
     # Static file serving
     def serve_static_file(file_path: str) -> Response;
     def register_static_file_endpoint -> None;

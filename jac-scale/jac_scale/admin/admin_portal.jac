@@ -7,6 +7,7 @@ import from collections.abc { Callable }
 import from pathlib { Path }
 import from fastapi { Request }
 import from fastapi.responses { HTMLResponse, JSONResponse, Response, FileResponse }
+import from jaclang.runtimelib.server { JacAPIServer as JServer }
 import from jaclang.runtimelib.transport { TransportResponse }
 import from jac_scale.jserver.jserver {
     HTTPMethod,
@@ -17,7 +18,7 @@ import from jac_scale.jserver.jserver {
 import from jac_scale.config_loader { get_scale_config }
 
 """Admin portal mixin providing administrative endpoints."""
-obj JacAPIServerAdmin {
+obj JacAPIServerAdmin(JServer) {
     # Admin initialization and bootstrap
     def register_admin_endpoints -> None;
     def bootstrap_admin -> None;

@@ -9,6 +9,7 @@ Integrates with byllm's callback system and litellm's CustomLogger.
 import from collections.abc { Callable }
 import from fastapi { Request }
 import from fastapi.responses { JSONResponse }
+import from jaclang.runtimelib.server { JacAPIServer as JServer }
 import from jaclang.runtimelib.transport { TransportResponse }
 import from jac_scale.jserver.jserver {
     HTTPMethod,
@@ -18,6 +19,6 @@ import from jac_scale.jserver.jserver {
 }
 
 """LLM Telemetry mixin providing telemetry storage, litellm logger, and REST endpoints."""
-obj JacAPIServerLLMTelemetry {
+obj JacAPIServerLLMTelemetry(JServer) {
     def register_llm_telemetry_endpoints -> None;
 }
