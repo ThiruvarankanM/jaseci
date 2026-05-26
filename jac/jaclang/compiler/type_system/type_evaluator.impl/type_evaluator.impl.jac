@@ -42,17 +42,11 @@ impl TypeEvaluator._get_type_of_expression_core(
                 }
                 # Forward-reference resolution: when a string is used in a type
                 # annotation context, resolve the string content as a type name.
-                # This handles: -> 'Path', has x: 'SomeType', p: 'SomeType'
-                # The String may be wrapped in MultiString, so check both levels.
-                if isinstance(expr.lit_value, str) {
-                    ann_parent = expr.parent
-                        if not isinstance(expr.parent, uni.MultiString)
-                        else expr.parent.parent;
-                    if isinstance(ann_parent, (uni.SubTag, uni.FuncSignature)) {
-                        resolved = self._try_resolve_forward_ref(expr);
-                        if resolved is not None {
-                            return resolved;
-                        }
+                # Covers: -> 'Path', has x: 'T', Union['T'], Optional['T'], etc.
+                if isinstance(expr.lit_value, str) and self._is_type_annotation_context(expr) {
+                    resolved = self._try_resolve_forward_ref(expr);
+                    if resolved is not None {
+                        return resolved;
                     }
                 }
                 # String literal -> Literal["value"]
@@ -70,7 +64,7 @@ impl TypeEvaluator._get_type_of_expression_core(
                 # When 'Path' is used as a type annotation, the parser wraps
                 # the String in a MultiString. Check if this is in a type context.
                 if (
-                    isinstance(expr.parent, (uni.SubTag, uni.FuncSignature))
+                    self._is_type_annotation_context(expr)
                     and len(expr.strings) == 1
                     and isinstance(expr.strings[0], uni.String)
                     and isinstance(expr.strings[0].lit_value, str)
@@ -1320,22 +1314,6 @@ impl TypeEvaluator._get_type_of_expression_core(
                             ua_vals = expr.right.slices[0].start;
                             if isinstance(ua_vals, uni.TupleVal) {
                                 for val in ua_vals.values {
-                                    if (
-                                        isinstance(val, uni.MultiString)
-                                        and val.strings
-                                        and isinstance(val.strings[0], uni.String)
-                                        and isinstance(val.strings[0].lit_value, str)
-                                    ) {
-                                        fwd = self._try_resolve_forward_ref(
-                                            val.strings[0]
-                                        );
-                                        if fwd is not None {
-                                            union_args.append(
-                                                self._convert_to_instance(fwd)
-                                            );
-                                            continue;
-                                        }
-                                    }
                                     union_args.append(
                                         self._convert_to_instance(
                                             self.get_type_of_expression(val)

@@ -30,6 +30,61 @@ impl TypeEvaluator._try_resolve_forward_ref(expr: uni.String) -> TypeBase | None
     return resolved;
 }
 
+"""Return True if `node` appears in a position where a string should be
+interpreted as a forward type reference rather than a string literal.
+
+Covers:
+  - Direct type annotation tags:  has x: 'Foo'   (SubTag parent)
+  - Return type annotations:      -> 'Foo'        (FuncSignature parent)
+  - Subscript args of type special forms: Union['Foo'], Optional['Foo'],
+    Union[('Foo', 'Bar')], ClassVar['Foo'], Final['Foo'], etc.
+"""
+impl TypeEvaluator._is_type_annotation_context(node: uni.UniNode) -> bool {
+    # Walk up past MultiString wrapper
+    parent = node.parent if not isinstance(node.parent, uni.MultiString) else node.parent.parent;
+    if parent is None {
+        return False;
+    }
+    # Direct annotation contexts: has x: 'Foo'  or  -> 'Foo'
+    if isinstance(parent, (uni.SubTag, uni.FuncSignature)) {
+        return True;
+    }
+    # Actual parent chain inside a subscript (verified from AST dump):
+    #   Optional['Foo']      → MultiString → ListVal → Slice → IndexSlice → AtomTrailer
+    #   Union[('Foo','Bar')] → MultiString → TupleVal → ListVal → Slice → IndexSlice → AtomTrailer
+    if isinstance(parent, uni.TupleVal) {
+        parent = parent.parent;
+    }
+    if isinstance(parent, uni.ListVal) {
+        parent = parent.parent;
+    }
+    if isinstance(parent, uni.Slice) {
+        parent = parent.parent;
+    }
+    if isinstance(parent, uni.IndexSlice) {
+        trailer = parent.parent;
+        if isinstance(trailer, uni.AtomTrailer) and not trailer.is_attr {
+            target = trailer.target;
+            target_name: str | None = None;
+            if isinstance(target, uni.Name) {
+                target_name = target.value;
+            } elif (
+                isinstance(target, uni.AtomTrailer)
+                and target.is_attr
+                and isinstance(target.right, uni.Name)
+            ) {
+                target_name = target.right.value;
+            }
+            if target_name in ("Union", "Optional", "ClassVar", "Final",
+                               "Annotated", "Required", "NotRequired",
+                               "ReadOnly", "Unpack") {
+                return True;
+            }
+        }
+    }
+    return False;
+}
+
 """Build field parameters from class MRO for synthesized constructors."""
 impl TypeEvaluator._build_field_params(
     class_type: types.ClassType, skip_deferred: bool = True
