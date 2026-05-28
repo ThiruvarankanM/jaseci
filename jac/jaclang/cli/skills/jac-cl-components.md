@@ -3,7 +3,7 @@ name: jac-cl-components
 description: Writing a client-side UI component - shape, reactive state, mount effects, rendering, event handlers. Load when creating or editing any `.cl.jac` file. Pair with `jac-cl-routing` (multi-page apps), `jac-cl-organization` (file layout & hooks), `jac-cl-auth` (protected pages).
 ---
 
-`.cl.jac` files are client-side Jac. A component is a `def:pub` function returning `JsxElement`. State = `has` fields, which compile 1:1 to React `useState` - assign directly (`x = x + 1` re-renders; no `setX(...)` call) but all `useState` semantics apply: writes are async, the closure stays stale until the next render. Mount effects = `async can with entry` (compiles to `useEffect`). Event handlers = `def` methods typed with ambient DOM events (`MouseEvent`, `ChangeEvent`, `FormEvent`, `KeyboardEvent`); use `async def` when the handler calls `sv import`. No `to cl:` header - the extension sets client context.
+`.cl.jac` files are client-side Jac. A component is a `def:pub` function returning `JsxElement`. State = `has` fields, which compile 1:1 to React `useState` - assign directly (`x = x + 1` re-renders; no `setX(...)` call) but all `useState` semantics apply: writes are async, the closure stays stale until the next render. Mount effects = `async can with entry` (compiles to `useEffect`). Event handlers = `def` methods typed with ambient DOM events (`MouseEvent`, `ChangeEvent`, `FormEvent`, `KeyboardEvent`). No `to cl:` header - the extension sets client context.
 
 ## This is Jac, not React or JavaScript
 
