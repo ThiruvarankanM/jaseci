@@ -272,7 +272,6 @@ def:pub EventListPage() -> JsxElement {
     has loading: bool = True;
 
     async can with entry {
-        # sv import call -- always await: events = await list_events();
         loading = False;
     }
 
