@@ -401,8 +401,9 @@ impl TypeEvaluator.get_type_of_class(node_: uni.Archetype) -> types.ClassType {
     }
     if metaclass is None {
         for base in base_classes {
-            if (isinstance(base, types.ClassType)
-                    and base.shared.metaclass is not None) {
+            if (
+                isinstance(base, types.ClassType) and base.shared.metaclass is not None
+            ) {
                 metaclass = base.shared.metaclass;
                 break;
             }
@@ -474,8 +475,7 @@ impl TypeEvaluator.get_type_of_enum(node_: uni.Enum) -> types.ClassType {
     # Inherit metaclass from base classes (e.g. Color(Enum) → EnumMeta).
     enum_metaclass: types.ClassType | None = None;
     for base in base_classes {
-        if (isinstance(base, types.ClassType)
-                and base.shared.metaclass is not None) {
+        if (isinstance(base, types.ClassType) and base.shared.metaclass is not None) {
             enum_metaclass = base.shared.metaclass;
             break;
         }
