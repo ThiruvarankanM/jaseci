@@ -790,16 +790,12 @@ impl bind_assignment_targets(nd: uni.Assignment) -> None {
                 # the enclosing ability (not an archetype). Assignments to these
                 # names in nested abilities are state mutations, not new locals.
                 outer_has.add_use(i.name_spec);
-            } elif (
-                (nd.type_tag is None)
-                and not isinstance(
-                    i.sym_tab, uni.UniScopeNode.get_python_scoping_nodes()
-                )
+            } elif not isinstance(
+                i.sym_tab, uni.UniScopeNode.get_python_scoping_nodes()
             ) {
-                # Python semantics: an unannotated assignment inside a non-scoping
-                # block (try/except/finally, if/else, for/while, match) binds in
-                # the nearest enclosing Python scope, not in the inner block.
-                # Mirrors the walrus handling in exit_binary_expr.
+                # Python has no block scope: any assignment inside if/for/
+                # while/try binds in the enclosing function scope, both for
+                # annotated (`x: T = v`) and unannotated (`x = v`) forms.
                 py_scope = find_python_scope_node_of(i);
                 if py_scope is not None {
                     if (

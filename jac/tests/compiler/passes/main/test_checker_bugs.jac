@@ -30,6 +30,7 @@ Bug index:
   #STUB-VGUARD - Module-level version-guarded stub symbols (e.g. datetime.UTC) resolve as Unknown
   #HOGEN-1 - TypeVars not bound through function-typed args; blocks generic decorator-application
   #WITHAS-1 - `with cm() as x` bound x to the manager not __enter__'s result; async with used sync protocol
+  #SCOPE-1 - Annotated decl `x: T = v` inside loop/if block created duplicate symbol; broke narrowing
 """
 
 import os;
@@ -883,5 +884,15 @@ test "bug_withas_1_async_with_as_binds_and_checks" {
         "Bug #WITHAS-1: `async with cm() as x` must verify the async protocol "
         "and bind x to the awaited __aenter__ result. "
         f"Got errors: {[str(e) for e in program.errors_had]}"
+    );
+}
+
+# Bug #SCOPE-1: annotated decl `x: T = v` inside a loop body was placed
+# in the inner block scope while bare reassigns bound to the function
+# scope, splitting the variable into two symbols and breaking narrowing.
+test "bug_scope_1_annotated_decl_in_loop_no_duplicate_symbol" {
+    program = compile_and_check("checker_bug_annotated_decl_in_loop.jac");
+    assert program.errors_had == [] , (
+        f"Bug #SCOPE-1: got errors: {[str(e) for e in program.errors_had]}"
     );
 }
