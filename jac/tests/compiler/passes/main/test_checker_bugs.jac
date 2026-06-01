@@ -30,6 +30,7 @@ Bug index:
   #STUB-VGUARD - Module-level version-guarded stub symbols (e.g. datetime.UTC) resolve as Unknown
   #HOGEN-1 - TypeVars not bound through function-typed args; blocks generic decorator-application
   #WITHAS-1 - `with cm() as x` bound x to the manager not __enter__'s result; async with used sync protocol
+  #ANY-IN-1 - `x in any_value` rejected with false E1111 (wrong is_any_type method called)
 """
 
 import os;
@@ -883,5 +884,15 @@ test "bug_withas_1_async_with_as_binds_and_checks" {
         "Bug #WITHAS-1: `async with cm() as x` must verify the async protocol "
         "and bind x to the awaited __aenter__ result. "
         f"Got errors: {[str(e) for e in program.errors_had]}"
+    );
+}
+
+# Bug #ANY-IN-1: `x in any_value` was rejected with false E1111. CompareExpr
+# used `TypeBase.is_any_type()` (category-only) which misses the prefetched
+# typing.Any class; switched to `TypeEvaluator.is_any_type()` (identity check).
+test "bug_any_in_1_in_operator_on_any" {
+    program = compile_and_check("checker_bug_in_operator_on_any.jac");
+    assert program.errors_had == [] , (
+        f"Bug #ANY-IN-1: got errors: {[str(e) for e in program.errors_had]}"
     );
 }

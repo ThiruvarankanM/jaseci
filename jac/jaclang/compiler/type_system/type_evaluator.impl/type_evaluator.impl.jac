@@ -1565,11 +1565,14 @@ impl TypeEvaluator._get_type_of_expression_core(
                 left_type = operand_types[i];
                 right_type = operand_types[i + 1];
                 # Skip validation for unknown/any types (not enough info to diagnose).
+                # Use TypeEvaluator.is_any_type (matches prefetched typing.Any
+                # class identity) instead of TypeBase.is_any_type (category-only
+                # check that misses the prefetched Any ClassType).
                 if (
                     isinstance(left_type, types.UnknownType)
                     or isinstance(right_type, types.UnknownType)
-                    or left_type.is_any_type()
-                    or right_type.is_any_type()
+                    or self.is_any_type(left_type)
+                    or self.is_any_type(right_type)
                 ) {
                     continue;
                 }
