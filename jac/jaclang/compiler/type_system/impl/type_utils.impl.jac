@@ -905,3 +905,16 @@ def _apply_to_function(
 
     return clone;
 }
+
+impl get_metaclass_expr(arch: uni.Archetype) -> (uni.Expr | None) {
+    for kw in arch.kid {
+        if (
+            isinstance(kw, uni.KWPair)
+            and isinstance(kw.key, uni.Name)
+            and kw.key.value == "metaclass"
+        ) {
+            return kw.value;
+        }
+    }
+    return None;
+}

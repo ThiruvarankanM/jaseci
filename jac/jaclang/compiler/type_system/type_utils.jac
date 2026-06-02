@@ -224,3 +224,12 @@ def build_solution_from_specialized_class(
 def specialize_for_base_class(
     src_type: types.ClassType, base_class: types.ClassType
 ) -> types.ClassType;
+
+"""Return the `metaclass=` expression from an Archetype's class keywords
+(e.g. `EnumMeta` for `class Enum(metaclass=EnumMeta)`), or None if not set.
+
+Class-level keyword args (`metaclass=`, `total=`, etc.) are stored as
+KWPair nodes in `Archetype.kid` by `pyast_load_pass.proc_class_def`. This
+helper scans `kid` for the `metaclass` keyword without requiring a
+dedicated field on the AST node."""
+def get_metaclass_expr(arch: uni.Archetype) -> (uni.Expr | None);

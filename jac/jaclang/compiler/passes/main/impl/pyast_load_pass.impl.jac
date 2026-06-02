@@ -2715,15 +2715,18 @@ impl PyastBuildPass.proc_class_def(nd: py_ast.ClassDef) -> (uni.Archetype | uni.
         for base in converted_base_classes
         if isinstance(base, uni.Expr)
     ];
-    # Extract metaclass= keyword argument (e.g. class Enum(metaclass=EnumMeta):)
-    metaclass_expr: uni.Expr | None = None;
+    # Preserve class-level keyword args (e.g. `metaclass=EnumMeta`,
+    # `total=False`) as KWPair nodes in `kid` so symbol resolution binds
+    # the referenced names. The type system extracts the metaclass via the
+    # `get_metaclass_expr` helper in `unitree_helpers`.
+    class_keywords: list[uni.KWPair] = [];
     for kw in nd.keywords {
-        if kw.arg == "metaclass" {
-            converted_meta = self.convert(kw.value);
-            if isinstance(converted_meta, uni.Expr) {
-                metaclass_expr = converted_meta;
-            }
-            break;
+        if kw.arg is None {
+            continue;  # skip **expansion form (no `arg` name)
+        }
+        converted_kw = self.proc_keyword(kw);
+        if isinstance(converted_kw, uni.KWPair) {
+            class_keywords.append(converted_kw);
         }
     }
     converted_decorators_list = [self.convert(i) for i in nd.decorator_list];
@@ -2742,10 +2745,7 @@ impl PyastBuildPass.proc_class_def(nd: py_ast.ClassDef) -> (uni.Archetype | uni.
     }
     kid.append(name);
     kid.extend(base_classes);
-    # Add to kid so symbol-resolution visits and binds the metaclass name.
-    if metaclass_expr is not None {
-        kid.append(metaclass_expr);
-    }
+    kid.extend(class_keywords);
     kid.extend(valid_body);
     if doc {
         kid.append(doc);
@@ -2758,8 +2758,7 @@ impl PyastBuildPass.proc_class_def(nd: py_ast.ClassDef) -> (uni.Archetype | uni.
         body=valid,
         kid=kid,
         doc=doc,
-        decorators=valid_decorators,
-        metaclass_expr=metaclass_expr
+        decorators=valid_decorators
     );
 }
 

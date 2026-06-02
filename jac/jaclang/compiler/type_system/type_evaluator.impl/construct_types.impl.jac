@@ -391,8 +391,9 @@ impl TypeEvaluator.get_type_of_class(node_: uni.Archetype) -> types.ClassType {
     # Resolve metaclass: explicit metaclass= wins, else inherit from base classes
     # (e.g. Color(Enum) gets EnumMeta even though Color doesn't declare it).
     metaclass: types.ClassType | None = None;
-    if node_.metaclass_expr is not None {
-        meta_type = self.get_type_of_expression(node_.metaclass_expr);
+    metaclass_expr = type_utils.get_metaclass_expr(node_);
+    if metaclass_expr is not None {
+        meta_type = self.get_type_of_expression(metaclass_expr);
         if isinstance(meta_type, types.ClassType) {
             metaclass = meta_type;
         }
