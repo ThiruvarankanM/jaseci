@@ -628,9 +628,9 @@ impl TypeEvaluator._get_type_of_expression_core(
                         # and is required for proper type checking of overloaded functions.
                         if isinstance(sym_type, types.FunctionType) {
                             overloaded_fns: list[types.FunctionType] = [sym_type];
-                            # Look up all symbols with the same name to find overloads
-                            all_syms = base_type.symbol_table.lookup_all(
-                                expr.right.value, deep=False
+                            # Overloads, including version-guarded ones.
+                            all_syms = type_utils.collect_member_syms(
+                                base_type.symbol_table, expr.right.value
                             );
                             for overload_symbol in all_syms {
                                 if overload_symbol == sym {
@@ -2032,7 +2032,9 @@ impl TypeEvaluator._get_type_of_expression_core(
                         }
                         # Check if there are overloads in the symbol's scope
                         if symbol_scope {
-                            all_syms = symbol_scope.lookup_all(expr.value, deep=False);
+                            all_syms = type_utils.collect_member_syms(
+                                symbol_scope, expr.value
+                            );
                             for overload_symbol in all_syms {
                                 if overload_symbol == symbol {
                                     continue;
@@ -2106,6 +2108,25 @@ impl TypeEvaluator._get_type_of_expression_core(
     }
     # TODO: More expressions.
     return types.UnknownType();
+}
+
+"""Widen literal types to their base class for an inferred declared type.
+
+`Literal["x"]` -> `str`, `Literal[1]` -> `int`, etc. Unions are widened
+member-wise; non-literal and non-class types pass through unchanged. Applied
+when freezing the declared type of an unannotated variable at its first
+binding, so the frozen type is the base class rather than the initial
+value's literal.
+"""
+impl TypeEvaluator._widen_literal_for_declaration(ty: TypeBase) -> TypeBase {
+    if isinstance(ty, types.ClassType) and ty.is_literal_type() {
+        return ty.clone_with_literal(None);
+    }
+    if isinstance(ty, types.UnionType) and ty.types is not None {
+        widened = [self._widen_literal_for_declaration(member) for member in ty.types];
+        return types.UnionType(types=widened);
+    }
+    return ty;
 }
 
 """Return the declared type of the symbol."""
@@ -2197,46 +2218,25 @@ impl TypeEvaluator._get_type_of_symbol(symbol: uni.Symbol) -> TypeBase {
                         if elem := self._extract_tuple_element_type(rhs_type, idx) {
                             return elem;
                         }
+                        # Non-tuple iterables (bytes, str, range, ...) bind
+                        # every target to the same iteration element type.
+                        if elem := self._get_iterable_element_type(
+                            rhs_type, unpack_assignment.value
+                        ) {
+                            return elem;
+                        }
                     }
                 }
-                # ---- Handle tuple unpacking in for loops: for (a, b, c) in <expr> ----
-                # Similar to Pyright's evaluateTypesForForStatement + assignTypeToTupleOrListNode
+                # Tuple unpacking in for loops / comprehensions:
+                # `for (a, b, c) in <expr>`. The loop element (e.g.
+                # tuple[int, Item] from enumerate) is unpacked positionally.
                 elif isinstance(unpack_assignment, (uni.InForStmt, uni.InnerCompr)) {
                     collection_type = self.get_type_of_expression(
                         unpack_assignment.collection
                     );
-                    # Get the iterator type from __iter__
-                    iter_type = self.get_type_of_magic_method_call(
-                        collection_type, "__iter__", [], unpack_assignment
+                    elem_type = self._get_iterable_element_type(
+                        collection_type, unpack_assignment
                     );
-                    elem_type: types.TypeBase | None = None;
-                    if isinstance(iter_type, types.ClassType) {
-                        # Get element type from __next__ - this gives the actual iteration element
-                        # For enumerate[Item], __next__ returns tuple[int, Item]
-                        next_type = self.get_type_of_magic_method_call(
-                            iter_type, "__next__", [], unpack_assignment
-                        );
-                        if next_type and not isinstance(next_type, types.UnknownType) {
-                            elem_type = self._convert_to_instance(next_type);
-                        } elif iter_type.private
-                        and iter_type.private.type_args
-                        and len(iter_type.private.type_args) == 1 {
-                            # Fallback: try to extract from type_args
-                            elem_type = iter_type.private.type_args[0];
-                            # If element type is a TypeVar, specialize it using collection's type_args
-                            if isinstance(elem_type, types.TypeVarType)
-                            and isinstance(collection_type, types.ClassType)
-                            and collection_type.private.type_args {
-                                specialized = iter_type.specialize_generics(
-                                    collection_type.private.type_args
-                                );
-                                if len(specialized.private.type_args) == 1 {
-                                    elem_type = specialized.private.type_args[0];
-                                }
-                            }
-                        }
-                    }
-                    # Now extract the tuple element at the correct index
                     if elem_type is not None {
                         idx = -1;
                         for (vi, v) in enumerate(unpack_container.values) {
@@ -2278,7 +2278,12 @@ impl TypeEvaluator._get_type_of_symbol(symbol: uni.Symbol) -> TypeBase {
                     return self._convert_to_instance(annotation_type);
                 } else {  # Assignment without a type annotation.
                     if node_.parent.value is not None {
-                        return self.get_type_of_expression(node_.parent.value);
+                        # The declared type is frozen at the first binding;
+                        # widen literals so it is the base class, not the
+                        # initial value's `Literal[...]`. Use sites stay narrow.
+                        return self._widen_literal_for_declaration(
+                            self.get_type_of_expression(node_.parent.value)
+                        );
                     }
                 }
             }
@@ -5515,6 +5520,14 @@ impl TypeEvaluator._resolve_py_ast_type_node(
             and base.symbol_table is not None
         ) {
             member = base.symbol_table.lookup(ast_node.attr);
+            if member is None
+            and (
+                inner := type_utils.collect_member_syms(
+                    base.symbol_table, ast_node.attr
+                )
+            ) {
+                member = inner[0];
+            }
             if member {
                 return self.get_type_of_symbol(member);
             }

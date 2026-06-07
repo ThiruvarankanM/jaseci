@@ -15,6 +15,7 @@ import jaclang;
 import from jaclang.cli.commands { analysis, execution, project, tools, transform }
 import from jaclang.cli.commands { config as config_cmd }
 import from jaclang.cli.registry { get_registry }
+import from jaclang.jac0core.diagnostic_utils { resolve_diagnostic_tokens }
 import from jaclang.project.config { set_config }
 import from jaclang.runtimelib.builtin { printgraph }
 
@@ -42,7 +43,7 @@ def _assert_error_pretty_found(needle: str, haystack: str) {
 }
 
 """Run jac check and return file count."""
-def _run_jac_check(test_dir: str, ignore_pattern: list = []) -> int {
+def _run_jac_check(test_dir: str, ignore_pattern: (list | None) = None) -> int {
     captured_stdout = io.StringIO();
     captured_stderr = io.StringIO();
     old_stdout = sys.stdout;
@@ -51,7 +52,7 @@ def _run_jac_check(test_dir: str, ignore_pattern: list = []) -> int {
     sys.stderr = captured_stderr;
 
     try {
-        analysis.check([test_dir], ignore=ignore_pattern);
+        analysis.check([test_dir], ignore=ignore_pattern or []);
         stdout = captured_stdout.getvalue();
         stderr = captured_stderr.getvalue();
     } finally {
@@ -482,6 +483,43 @@ test "run test with directory filter" {
     assert "circle" in stdout;
     assert "circle_purfe.test" not in stdout;
     assert "circle_pure.impl" not in stdout;
+}
+
+test "discovery prunes hidden and pycache dirs" {
+    tmp_dir = tempfile.mkdtemp();
+    try {
+        os.makedirs(os.path.join(tmp_dir, ".jac"));
+        os.makedirs(os.path.join(tmp_dir, "__pycache__"));
+        # A real, top-level test that must be discovered and pass.
+        Path(os.path.join(tmp_dir, "good_test.jac")).write_text(
+            'test "good_one" {\n    assert True;\n}\n'
+        );
+        # Failing tests planted inside the build-cache (".jac") and pycache
+        # dirs. The discovery walk must prune these, so they never run.
+        Path(os.path.join(tmp_dir, ".jac", "skip_test.jac")).write_text(
+            'test "pruned_cache" {\n    assert False;\n}\n'
+        );
+        Path(os.path.join(tmp_dir, "__pycache__", "skip_test.jac")).write_text(
+            'test "pruned_pyc" {\n    assert False;\n}\n'
+        );
+        process = subprocess.Popen(
+            ["jac", "test", "-d", tmp_dir],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        );
+        (stdout, stderr) = process.communicate();
+        combined = stdout + stderr;
+        # Top-level test is discovered and runs to a pass.
+        assert "good_test.jac" in combined;
+        assert "Passed successfully." in combined;
+        # Hidden / pycache dirs are pruned: their failing tests never run.
+        assert "skip_test.jac" not in combined;
+        assert "FAILED" not in combined;
+        assert process.returncode == 0;
+    } finally {
+        shutil.rmtree(tmp_dir, ignore_errors=True);
+    }
 }
 
 test "run test with filter maxfail" {
@@ -1880,21 +1918,17 @@ test "jac check nowarn flag suppresses warnings" {
 }
 
 """Run analysis.check with captured stdout/stderr; reset global config after."""
-def _check_captured(paths: list, disable_error_code: list = []) -> tuple[int, str] {
-    captured_stdout = io.StringIO();
-    captured_stderr = io.StringIO();
-    old_stdout = sys.stdout;
-    old_stderr = sys.stderr;
-    sys.stdout = captured_stdout;
-    sys.stderr = captured_stderr;
+def _check_captured(
+    paths: list, disable_error_code: (list | None) = None
+) -> tuple[int, str] {
+    (captured_stdout, captured_stderr, old_stdout, old_stderr) = _capture_output();
     _reset_config();
     try {
-        result = analysis.check(paths, disable_error_code=disable_error_code);
+        result = analysis.check(paths, disable_error_code=disable_error_code or []);
         combined = captured_stdout.getvalue() + captured_stderr.getvalue();
         return (result, combined);
     } finally {
-        sys.stdout = old_stdout;
-        sys.stderr = old_stderr;
+        _restore_output(old_stdout, old_stderr);
         set_config(None);
         _reset_config();
     }
@@ -1911,7 +1945,7 @@ test "jac check disable_error_code maps to check arg" {
 }
 
 test "jac check disable_error_code resolves kebab alias and comma tokens" {
-    (resolved, unknown) = analysis._resolve_disable_error_codes(
+    (resolved, unknown) = resolve_diagnostic_tokens(
         ["no-print", "E1030,W2001", "e9999", "E9999"]
     );
     assert resolved == ["E3012", "E1030", "W2001"] , (

@@ -448,8 +448,7 @@ impl install(
         import subprocess;
         import from jaclang.publish.builder { WheelBuilder }
         console.print(
-            f"\n📦 Editable install: [cyan]{config.project.name}[/cyan] "
-            f"from [dim]{src_dir}[/dim]",
+            f"\n📦 Editable install: {config.project.name} " f"from {src_dir}",
             style="bold"
         );
 
@@ -494,8 +493,7 @@ impl install(
         return 0;
     }
     console.print(
-        f"\n📦 Installing dependencies for [cyan]{config.project.name}[/cyan]",
-        style="bold"
+        f"\n📦 Installing dependencies for {config.project.name}", style="bold"
     );
     console.print(f"  Virtual environment: {config.get_venv_dir()}", style="muted");
     console.print();
@@ -532,7 +530,7 @@ impl install(
     all_packages = pip_packages + git_packages;
     if all_packages {
         with console.status(
-            f"[cyan]Installing {len(all_packages)} package(s)...[/cyan]", spinner="dots"
+            f"Installing {len(all_packages)} package(s)...", spinner="dots"
         ) as status {
             install_success = installer.install_package(all_packages);
         }
@@ -610,11 +608,9 @@ impl add(
                 pkg_name = pkg_name[:-4];
             }
         }
-        console.print(f"\n📦 Adding [cyan]{pkg_name}[/cyan] from git", style="bold");
+        console.print(f"\n📦 Adding {pkg_name} from git", style="bold");
         console.print(f"  Repository: {git}", style="muted");
-        with console.status(
-            f"[cyan]Installing {pkg_name}...[/cyan]", spinner="dots"
-        ) as status {
+        with console.status(f"Installing {pkg_name}...", spinner="dots") as status {
             specs = installer._make_git_spec(pkg_name, git);
             git_success = installer.install_package([specs]);
         }
@@ -637,9 +633,7 @@ impl add(
         } else {
             install_spec = name;
         }
-        with console.status(
-            f"[cyan]Installing {name}...[/cyan]", spinner="dots"
-        ) as status {
+        with console.status(f"Installing {name}...", spinner="dots") as status {
             pkg_success = installer.install_package([install_spec]);
         }
         if pkg_success {
@@ -803,11 +797,11 @@ impl update(packages: list = [], dev: bool = False, verbose: bool = False) -> in
         return 0;
     }
     console.print(
-        f"\n📦 Updating {len(specs_to_update)} package(s) for [cyan]{config.project.name}[/cyan]",
+        f"\n📦 Updating {len(specs_to_update)} package(s) for {config.project.name}",
         style="bold"
     );
     with console.status(
-        f"[cyan]Updating {len(specs_to_update)} package(s)...[/cyan]", spinner="dots"
+        f"Updating {len(specs_to_update)} package(s)...", spinner="dots"
     ) as status {
         update_success = installer.install_package(specs_to_update);
     }
@@ -1125,6 +1119,14 @@ def _run_precompile_in_venv(
     # or source tree) instead of PyPI when the named version isn't yet published.
     local_install = os.environ.get("JAC_PRECOMPILE_LOCAL_INSTALL");
     jac_spec = local_install or f"jaclang=={jac_version}";
+    # Same, for sibling Jac packages (comma-separated source dirs): install them
+    # from local source first so a not-yet-published sibling pin still resolves.
+    local_deps_raw = os.environ.get("JAC_PRECOMPILE_LOCAL_DEPS", "");
+    local_dep_specs = [
+        d.strip()
+        for d in local_deps_raw.split(",")
+        if d.strip()
+    ];
 
     with tempfile.TemporaryDirectory() as tmp {
         venv_dir = Path(tmp) / "venv";
@@ -1151,6 +1153,17 @@ def _run_precompile_in_venv(
             return f"pip install {jac_spec} failed:\n{jac_install.stderr.decode(
                 errors='replace'
             )}";
+        }
+        # Use `jac install -e` (not pip): Jac plugins have no pyproject.toml.
+        for sib in local_dep_specs {
+            sib_install = subprocess.run(
+                [venv_jac, "install", "-e", sib, "--quiet"], capture_output=True
+            );
+            if sib_install.returncode != 0 {
+                return f"jac install -e {sib} (local sibling) failed:\n{sib_install.stderr.decode(
+                    errors='replace'
+                )}";
+            }
         }
         if dep_specs {
             deps_install = subprocess.run(
@@ -1227,9 +1240,109 @@ def _precompile_all_pythons(config: JacConfig) -> int {
     return 0;
 }
 
-impl bundle(output: str = "dist", precompile: bool = False) -> int {
-    import from jaclang.project.config { get_config }
+"""Build a wheel for `jac bundle`; returns 0 on success."""
+def _bundle_wheel(config: any, output: str, precompile: bool) -> int {
     import from jaclang.publish.builder { WheelBuilder }
+
+    if precompile {
+        if _precompile_all_pythons(config) != 0 {
+            return 1;
+        }
+    }
+
+    out_dir = Path(output);
+    out_dir.mkdir(parents=True, exist_ok=True);
+    builder = WheelBuilder(config=config, project_root=config.project_root);
+
+    console.print("\n  Building wheel...", style="muted");
+    try {
+        whl_path = builder.build_to(out_dir);
+    } except Exception as e {
+        console.error(f"Wheel build failed: {e}");
+        return 1;
+    }
+    console.print(
+        f"  ✔ Built {whl_path.name} ({whl_path.stat().st_size:,} bytes)",
+        style="success"
+    );
+
+    console.print("  Building sdist...", style="muted");
+    try {
+        sdist_path = builder.build_sdist_to(out_dir);
+    } except Exception as e {
+        console.error(f"Sdist build failed: {e}");
+        return 1;
+    }
+    console.print(
+        f"  ✔ {sdist_path.name} ({sdist_path.stat().st_size:,} bytes)", style="success"
+    );
+
+    console.print(
+        f"\n  Distributions written to: [cyan]{out_dir}[/cyan]", style="bold"
+    );
+    console.print("  Upload with: twine upload dist/*", style="muted");
+    return 0;
+}
+
+"""Build an npm tarball for `jac bundle --target npm`; returns 0 on success."""
+def _bundle_npm(config: any, output: str) -> int {
+    import from jaclang.publish.npm_builder { NpmBuilder }
+    import from jaclang.publish.npm_sources { NpmBoundaryError }
+
+    out_dir = Path(output);
+    out_dir.mkdir(parents=True, exist_ok=True);
+    console.print("\n  Building npm tarball...", style="muted");
+    try {
+        builder = NpmBuilder(config=config, project_root=config.project_root);
+        tgz_path = builder.build_to(out_dir);
+    } except NpmBoundaryError as e {
+        console.error(f"npm build failed: {e}");
+        return 1;
+    } except Exception as e {
+        console.error(f"npm build failed: {e}");
+        return 1;
+    }
+    console.print(
+        f"  ✔ Built {tgz_path.name} ({tgz_path.stat().st_size:,} bytes)",
+        style="success"
+    );
+    console.print(f"  Tarball written to: {tgz_path}", style="cyan");
+    console.print("  Publish with: npm publish", style="muted");
+    return 0;
+}
+
+"""Build the @jaseci/runtime npm package (maintainer task); returns 0 on success."""
+def _bundle_npm_runtime(output: str) -> int {
+    import from jaclang.publish.runtime_npm { build_runtime_to, RUNTIME_PKG_NAME }
+    import importlib.metadata;
+
+    version = importlib.metadata.version("jaclang");
+    out_dir = Path(output);
+    console.print(f"\n📦 Building {RUNTIME_PKG_NAME} v{version}", style="bold");
+    console.print("\n  Compiling runtime → npm tarball...", style="muted");
+    try {
+        path = build_runtime_to(out_dir, version);
+    } except Exception as e {
+        console.error(f"runtime build failed: {e}");
+        return 1;
+    }
+    console.print(
+        f"  ✔ Built {path.name} ({path.stat().st_size:,} bytes)", style="success"
+    );
+    console.print(f"  Tarball written to: {path}", style="cyan");
+    console.print("  Publish with: npm publish", style="muted");
+    return 0;
+}
+
+impl bundle(
+    output: str = "dist", target: str = "wheel", precompile: bool = False
+) -> int {
+    import from jaclang.project.config { get_config }
+
+    # The runtime package is a standalone artifact and needs no project config.
+    if target == "npm-runtime" {
+        return _bundle_npm_runtime(output);
+    }
 
     config = get_config();
     if config is None {
@@ -1245,34 +1358,28 @@ impl bundle(output: str = "dist", precompile: bool = False) -> int {
         );
         return 1;
     }
+    if target not in ("wheel", "npm", "all") {
+        console.error(
+            f"Unknown bundle target: '{target}'",
+            hint="Use --target wheel, npm, or all."
+        );
+        return 1;
+    }
 
     console.print(
-        f"\n📦 Bundling [cyan]{config.project.name}[/cyan] "
-        f"v{config.project.version}",
+        f"\n📦 Bundling {config.project.name} " f"v{config.project.version} ({target})",
         style="bold"
     );
 
-    if precompile {
-        if _precompile_all_pythons(config) != 0 {
+    if target in ("wheel", "all") {
+        if _bundle_wheel(config, output, precompile) != 0 {
             return 1;
         }
     }
-
-    out_dir = Path(output);
-    out_dir.mkdir(parents=True, exist_ok=True);
-    console.print("\n  Building wheel...", style="muted");
-    try {
-        builder = WheelBuilder(config=config, project_root=config.project_root);
-        whl_path = builder.build_to(out_dir);
-    } except Exception as e {
-        console.error(f"Build failed: {e}");
-        return 1;
+    if target in ("npm", "all") {
+        if _bundle_npm(config, output) != 0 {
+            return 1;
+        }
     }
-    console.print(
-        f"  ✔ Built [bold]{whl_path.name}[/bold] "
-        f"({whl_path.stat().st_size:,} bytes)",
-        style="success"
-    );
-    console.print(f"\n  Wheel written to: [cyan]{whl_path}[/cyan]", style="bold");
     return 0;
 }
