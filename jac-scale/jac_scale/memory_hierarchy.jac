@@ -30,6 +30,10 @@ import from jaclang.runtimelib.utils { storage_key, to_uuid }
 import from jaclang.runtimelib.serializer { Serializer }
 import from jaclang.runtimelib.typecache { get_field_types }
 import from jac_scale.config_loader { get_scale_config }
+import from jac_scale.schema_migration {
+    apply_migrations,
+    collect_deprecated_fields
+}
 import from jaclang { JacRuntimeInterface as Jac }
 
 glob logger = logging.getLogger(__name__),

@@ -172,6 +172,15 @@ def _anchor_to_doc(anchor: Anchor) -> dict {
         arch_type = type(arch).__name__;
         fp = type(arch)?.__jac_fingerprint__;
         fingerprint = fp if isinstance(fp, str) and fp else None;
+        # Strip deprecated fields so they are never written back once the
+        # expand-contract transition window closes.
+        qname = f"{arch_module}.{arch_type}";
+        dep_fields = collect_deprecated_fields(qname, arch_cls=type(arch));
+        if dep_fields and isinstance(data, dict) and isinstance(data.get('archetype'), dict) {
+            for f in dep_fields {
+                data['archetype'].pop(f, None);
+            }
+        }
     }
     return {
         'type': anchor_type,
@@ -180,6 +189,7 @@ def _anchor_to_doc(anchor: Anchor) -> dict {
         'fingerprint': fingerprint,
         'data': data,
         'format_version': 1,
+        'schema_version': 1,
         'updated_at': datetime.now(timezone.utc).isoformat()
     };
 }
@@ -363,6 +373,7 @@ impl MongoBackend.get(id: UUID) -> (Anchor | None) {
     fingerprint = db_obj.get('fingerprint');
     data = db_obj.get('data');
     fmt_version = db_obj.get('format_version');
+    stored_sv = db_obj.get('schema_version', 1);
     # Fingerprint drift check (INFO-only; best-effort load proceeds below).
     if arch_module and arch_type and fingerprint {
         cls = Serializer._get_class(arch_module, arch_type);
@@ -373,6 +384,38 @@ impl MongoBackend.get(id: UUID) -> (Anchor | None) {
                 f"(stored={fingerprint}, current={current_fp}, id={id}); "
                 "attempting best-effort load."
             );
+        }
+    }
+    # Apply schema migrations (field aliases + versioned upgrade chain)
+    # before handing data to the Serializer so stale field layouts are
+    # resolved transparently.  If any migration was applied we immediately
+    # write the updated archetype fields back (read-repair / lazy migration).
+    if arch_module and arch_type and isinstance(data, dict) and isinstance(data.get('archetype'), dict) {
+        (migrated_arch, was_migrated) = apply_migrations(
+            arch_module, arch_type, data['archetype']
+        );
+        if was_migrated {
+            data = dict(data);
+            data['archetype'] = migrated_arch;
+            try {
+                _id_str = str(to_uuid(id));
+                self.collection.update_one(
+                    {'_id': _id_str},
+                    {'$set': {
+                        'data.archetype': migrated_arch,
+                        'schema_version': 1,
+                        'updated_at': datetime.now(timezone.utc).isoformat()
+                    }}
+                );
+                logger.debug(
+                    f"MongoBackend.get: read-repair applied for {arch_module}.{arch_type} "
+                    f"(id={id})"
+                );
+            } except Exception as repair_err {
+                logger.warning(
+                    f"MongoBackend.get: read-repair write failed for {id}: {repair_err}"
+                );
+            }
         }
     }
     try {
@@ -934,7 +977,13 @@ impl MongoBackend.reset_counters -> None {
     self.put_count = 0;
 }
 
-"""Load anchor from raw MongoDB document, quarantining on failure."""
+"""Load anchor from raw MongoDB document, quarantining on failure.
+
+Before passing the raw data dict to the Serializer this function applies
+any registered schema migrations (field aliases + version-hop chain).  If
+a migration was applied the document is immediately written back with the
+updated archetype fields and schema_version (read-repair).
+"""
 impl MongoBackend._load_anchor(raw: dict[(str, Any)]) -> (Anchor | None) {
     if 'data' not in raw {
         return None;
@@ -945,7 +994,40 @@ impl MongoBackend._load_anchor(raw: dict[(str, Any)]) -> (Anchor | None) {
     arch_type = raw.get('arch_type');
     fingerprint = raw.get('fingerprint');
     fmt_version = raw.get('format_version');
+    stored_sv = raw.get('schema_version', 1);
     data = raw['data'];
+    # Apply schema migrations before deserialization.
+    if arch_module and arch_type and isinstance(data, dict) and isinstance(data.get('archetype'), dict) {
+        (migrated_arch, was_migrated) = apply_migrations(
+            arch_module, arch_type, data['archetype']
+        );
+        if was_migrated {
+            data = dict(data);
+            data['archetype'] = migrated_arch;
+            if self.client is not None and doc_id {
+                try {
+                    self.collection.update_one(
+                        {'_id': doc_id},
+                        {'$set': {
+                            'data.archetype': migrated_arch,
+                            'schema_version': 1,
+                            'updated_at': datetime.now(timezone.utc).isoformat()
+                        }}
+                    );
+                    logger.debug(
+                        f"MongoBackend._load_anchor: read-repair applied for "
+                        f"{arch_module}.{arch_type} "
+                        f"(id={doc_id})"
+                    );
+                } except Exception as repair_err {
+                    logger.warning(
+                        f"MongoBackend._load_anchor: read-repair write failed "
+                        f"for {doc_id}: {repair_err}"
+                    );
+                }
+            }
+        }
+    }
     try {
         anchor = Serializer.deserialize(data);
     } except Exception as e {
