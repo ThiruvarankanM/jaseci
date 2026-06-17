@@ -39,6 +39,7 @@ Bug index:
                       Unknown when the included submodule imported back from its
                       own package (circular self-import); poisoned the vendored
                       llvm ir/binding surface and every native pass (#7163)
+  #SELF-ANNO-TVAR - Constructor overload's `self: C[T]` annotation didn't bind class TypeVar T
 """
 
 import os;
@@ -1006,6 +1007,21 @@ test "bug_byte_literal_typed_as_bytes" {
     assert program.errors_had == [] , (
         "Bug : a byte-string literal (b\"...\") must be typed as bytes, "
         "so it assigns to bytes and concatenates with other bytes. "
+        f"Got errors: {[str(e) for e in program.errors_had]}"
+    );
+}
+
+# Bug #SELF-ANNO-TVAR: typeshed pins generic-class type arguments via
+# overloaded constructors annotating self (e.g. `def __init__(self:
+# TemporaryDirectory[str], ...)`). The matched overload's self annotation
+# must bind the class TypeVars so method return types like
+# `def __enter__(self) -> AnyStr` resolve to the concrete type instead
+# of falling back to Unknown / Any.
+test "bug_self_annotation_binds_class_typevars" {
+    program = compile_and_check("checker_bug_self_annotation_typevar.jac");
+    assert program.errors_had == [] , (
+        "Bug #SELF-ANNO-TVAR: matched constructor overload's `self: C[T]` "
+        "annotation must bind class TypeVar T at call time. "
         f"Got errors: {[str(e) for e in program.errors_had]}"
     );
 }

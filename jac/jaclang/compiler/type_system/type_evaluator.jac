@@ -501,6 +501,12 @@ obj TypeEvaluator {
         matched_method: types.FunctionType | None
     ) -> list[TypeBase];
 
+    def _extract_self_annotation_bindings(
+        caller_type: types.ClassType,
+        method: types.FunctionType,
+        bindings: dict[str, TypeBase]
+    ) -> None;
+
     def _find_matching_raw_constructor(
         caller_type: types.ClassType,
         expr: uni.FuncCall,

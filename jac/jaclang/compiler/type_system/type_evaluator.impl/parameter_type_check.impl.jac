@@ -780,6 +780,12 @@ impl TypeEvaluator._infer_type_args_from_method(
         init_method, expr, is_constructor_call=True
     );
 
+    # Bind TypeVars from the winning overload's `self: Class[ConcreteType]` annotation.
+    # `_collect_type_var_bindings` skips `self`, so no-arg calls like
+    # `TemporaryDirectory()` would leave AnyStr unbound without this.
+    self._extract_self_annotation_bindings(caller_type, init_method, bindings);
+
+    # First, try direct binding from class type_params (works for enumerate)
     direct_args = [
         bindings.get(tp.name, types.UnknownType())
         for tp in caller_type.shared.type_params
@@ -804,6 +810,59 @@ impl TypeEvaluator._infer_type_args_from_method(
     return direct_args;
 }
 
+# Bind class TypeVars from self/cls annotation on the matched constructor overload.
+# Walks class_params and self's type_args in parallel, skips already-bound TypeVars.
+impl TypeEvaluator._extract_self_annotation_bindings(
+    caller_type: types.ClassType,
+    method: types.FunctionType,
+    bindings: dict[str, TypeBase]
+) -> None {
+    if not method.parameters {
+        return;
+    }
+    first = method.parameters[0];
+    if not (first.is_self or first.is_cls) {
+        return;
+    }
+    self_ann = first.param_type;
+    # For `cls: type[Self[...]]` the binding info is one level inside `type[...]`.
+    if (
+        first.is_cls
+        and isinstance(self_ann, types.ClassType)
+        and self_ann.private.type_args
+        and self.prefetch is not None
+        and self.prefetch.type_class is not None
+        and self_ann.shared == self.prefetch.type_class.shared
+    ) {
+        self_ann = self_ann.private.type_args[0];
+    }
+    if not isinstance(self_ann, types.ClassType) {
+        return;
+    }
+    # Only meaningful when the annotation is the SAME class being constructed.
+    # A different class in the self slot would be a typeshed error, not our
+    # binding source.
+    if self_ann.shared != caller_type.shared {
+        return;
+    }
+    if not self_ann.private.type_args {
+        return;
+    }
+    # Walk type_params and self's type_args in parallel.
+    class_params = caller_type.shared.type_params;
+    self_args = self_ann.private.type_args;
+    for i in range(min(len(class_params), len(self_args))) {
+        tp = class_params[i];
+        if not tp.name or tp.name in bindings {
+            continue;  # already bound from arg matching
+        }
+        self.assign_type_to_type_var(tp, self_args[i], bindings);
+    }
+}
+
+"""
+Substitute TypeVars in a type using bindings.
+"""
 impl TypeEvaluator._substitute_type_vars(
     typ: types.TypeBase, bindings: dict[str, types.TypeBase]
 ) -> types.TypeBase {
