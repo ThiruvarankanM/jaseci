@@ -33,6 +33,7 @@ Bug index:
   #UNPACK-1 - Assignment unpacking of a non-tuple iterable (bytes/str/range) typed targets as Unknown
   #BYTES-1 - Byte-string literals (b"...") typed as str instead of bytes
   #EVOLVING-NONE - `x = None` then reassign inside `if` lost the new type post-branch
+  #SELF-ANNO-TVAR - Constructor overload's `self: C[T]` annotation didn't bind class TypeVar T
 """
 
 import os;
@@ -903,6 +904,21 @@ test "bug_byte_literal_typed_as_bytes" {
     assert program.errors_had == [] , (
         "Bug : a byte-string literal (b\"...\") must be typed as bytes, "
         "so it assigns to bytes and concatenates with other bytes. "
+        f"Got errors: {[str(e) for e in program.errors_had]}"
+    );
+}
+
+# Bug #SELF-ANNO-TVAR: typeshed pins generic-class type arguments via
+# overloaded constructors annotating self (e.g. `def __init__(self:
+# TemporaryDirectory[str], ...)`). The matched overload's self annotation
+# must bind the class TypeVars so method return types like
+# `def __enter__(self) -> AnyStr` resolve to the concrete type instead
+# of falling back to Unknown / Any.
+test "bug_self_annotation_binds_class_typevars" {
+    program = compile_and_check("checker_bug_self_annotation_typevar.jac");
+    assert program.errors_had == [] , (
+        "Bug #SELF-ANNO-TVAR: matched constructor overload's `self: C[T]` "
+        "annotation must bind class TypeVar T at call time. "
         f"Got errors: {[str(e) for e in program.errors_had]}"
     );
 }
