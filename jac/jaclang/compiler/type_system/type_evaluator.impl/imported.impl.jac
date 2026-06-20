@@ -127,7 +127,8 @@ impl TypeEvaluator.get_type_of_module_item(node_: uni.ModuleItem) -> types.TypeB
             );
             return node_.name.type;
         } else {
-            mod_type = self.get_type_of_module(import_node.from_loc);
+            # Reuse the result already computed for the gate condition above.
+            mod_type = from_mod_type;
             if not isinstance(mod_type, types.ModuleType) {
                 # Module resolution failed; W1100 was emitted by
                 # get_type_of_module on the from-clause node.
