@@ -11,7 +11,7 @@ on:
 jobs:
   real-e2e:
     name: microk8s real-app smoke
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 25
 
     steps:
@@ -65,7 +65,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/buildkit-cache
-          key: buildkit-${{ runner.os }}-${{ hashFiles('jac/pyproject.toml', 'jac-scale/pyproject.toml', 'jac-client/pyproject.toml', 'jac-scale/scripts/Dockerfile.microservice.exp') }}
+          key: buildkit-${{ runner.os }}-${{ hashFiles('jac/pyproject.toml', 'jac-scale/pyproject.toml', 'jac-scale/scripts/Dockerfile.microservice.exp') }}
 
       - name: Show cluster info
         run: |
