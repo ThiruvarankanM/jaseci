@@ -88,6 +88,35 @@ pub fn build(b: *std.Build) void {
     b.step("stub", "Build just the launcher stub (no payload)")
         .dependOn(&b.addInstallArtifact(stub, .{}).step);
 
+    // --- libjacpyembed shim: the na desktop host's bridge to the fused runtime --
+    // A shared library that DT_NEEDED-links into the `na` desktop host and brings
+    // up the SAME bundled CPython the launcher embeds (embed.zig), instead of the
+    // build machine's libpython. Links libc only (libpython is dlopened at boot).
+    const pyembed_mod = b.createModule(.{
+        .root_source_file = b.path("launcher/pyembed.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    const pyembed = b.addLibrary(.{ .name = "jacpyembed", .root_module = pyembed_mod, .linkage = .dynamic });
+    // Place the shim into the source tree (gitignored) so the editable dev loop --
+    // which serves the desktop assets from source, not the payload -- finds it via
+    // _find_desktop_native_dir(). Mirrors the LLVM shim's `place` step; the release
+    // build stages it into the payload via --pyembed below instead.
+    const pyembed_basename = switch (target.result.os.tag) {
+        .windows => "jacpyembed.dll",
+        .macos => "libjacpyembed.dylib",
+        else => "libjacpyembed.so",
+    };
+    const pyembed_place = b.addUpdateSourceFiles();
+    pyembed_place.addCopyFileToSource(
+        pyembed.getEmittedBin(),
+        b.fmt("jaclang/runtimelib/client/targets/desktop/native/{s}", .{pyembed_basename}),
+    );
+    const pyembed_step = b.step("pyembed", "Build the libjacpyembed shim (na desktop host -> fused runtime)");
+    pyembed_step.dependOn(&b.addInstallArtifact(pyembed, .{}).step);
+    pyembed_step.dependOn(&pyembed_place.step);
+
     // --- unit tests (pure Zig, no libpython) -------------------------------
     addTests(b, target, optimize);
 
@@ -175,6 +204,11 @@ pub fn build(b: *std.Build) void {
             // editable dev loop works without any manual step.
             b.getInstallStep().dependOn(shim.place);
         }
+        // Bundle the libjacpyembed shim beside the desktop native assets (release)
+        // and drop it into the source tree (dev), so the desktop host build always
+        // finds a platform-matched shim for THIS fused runtime.
+        mk.addPrefixedFileArg("--pyembed=", pyembed.getEmittedBin());
+        b.getInstallStep().dependOn(&pyembed_place.step);
         if (b.option(bool, "skip-precompile", "mkpayload: skip the JIR precompile (faster link validation)") orelse false) {
             mk.addArg("--skip-precompile");
         }
