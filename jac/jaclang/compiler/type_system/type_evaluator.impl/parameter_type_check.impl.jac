@@ -490,18 +490,20 @@ impl TypeEvaluator.match_args_to_params(
             params_to_match.insert(0, synthetic_self);
         }
         # For class types with explicit self, keep it in params_to_match (don't pop)
-    } elif len(func_type.parameters) >= 1 {
+    } else {
         # Bound call: pop self/cls as usual.
         # For is_cls, only pop when the function is a classmethod (cls is auto-bound).
         # __new__ is a staticmethod in CPython — its cls param has is_cls=True for
         # constructor resolution but should NOT be auto-stripped in direct calls.
-        first = func_type.parameters[0];
-        if first.is_self
-        or (
-            first.is_cls
-            and func_type.function_flags & types.FunctionTypeFlags.ClassMethod
-        ) {
-            params_to_match.pop(0);
+        if len(func_type.parameters) >= 1 {
+            first = func_type.parameters[0];
+            if first.is_self
+            or (
+                first.is_cls
+                and func_type.function_flags & types.FunctionTypeFlags.ClassMethod
+            ) {
+                params_to_match.pop(0);
+            }
         }
     }
     param_tracker = type_utils.ParamAssignmentTracker(params_to_match);
