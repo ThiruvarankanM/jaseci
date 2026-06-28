@@ -52,7 +52,9 @@ import from jaclang.jac0core.diagnostics {
     W3040,
     W3041,
     W3042,
-    W3043
+    W3043,
+    W3050,
+    W3051
 }
 
 # W3043 impl-side coordination: dotted impl target ("Cls.prop" / "Outer.Inner.prop")
@@ -69,7 +71,9 @@ obj JacAutoLintPass(UniPass) {
         _exclude_patterns: list[str] = [],
         _project_root: str = "",
         _did_convert_usestate: bool = False,
-        _pending_setters: list[dict[str, str]] = [];
+        _pending_setters: list[dict[str, str]] = [],
+        _base_decl_cache: list[uni.Archetype] = [],
+        _base_decls_loaded: bool = False;
 
     """Initialize the pass with linting options."""
     def postinit -> None;
@@ -122,6 +126,14 @@ obj JacAutoLintPass(UniPass) {
     def exit_bool_expr(bool_node: uni.BoolExpr) -> None;
     def _is_future_annotations_import(stmt: uni.UniNode) -> bool;
     def _fix_impl_signature_mismatch(impl_node: uni.ImplDef) -> None;
+    """Top-level archetype declarations of an annex file's base module.
+
+    Annex (.impl.jac) files are formatted as their own tool programs, so the
+    declarations an impl is matched against live in a different file. Parse that
+    base file (once, cached) so cross-file signature mismatches can still be
+    fixed when formatting the annex in isolation."""
+    def _base_decl_archetypes(annex_path: str) -> list[uni.Archetype];
+
     def _signatures_match(
         decl_sig: uni.FuncSignature, impl_sig: uni.FuncSignature
     ) -> bool;
@@ -178,6 +190,10 @@ obj JacAutoLintPass(UniPass) {
     def _strip_usestate_imports(nd: uni.Module) -> None;
     def exit_expr_stmt(nd: uni.ExprStmt) -> None;
     def exit_module(nd: uni.Module) -> None;
+    # Deslop rules (W3050 strip-comments, W3051 strip-docstrings)
+    def _strip_noise(nd: uni.Module) -> None;
+    def _strip_docstrings(start: uni.UniNode) -> None;
+    def _collect_doc_nodes(`node: uni.UniNode, results: list) -> None;
     # Stale-`has`-read detection (W3041)
     def _check_stale_has_read(ability_node: uni.Ability) -> None;
     def _collect_reactive_has_names(ability_node: uni.Ability) -> set[str];
