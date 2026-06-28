@@ -55,7 +55,6 @@ glob CHECKER_FIXTURES = os.path.join(
          JAC_ROOT, "tests", "compiler", "passes", "main", "fixtures", "checker"
      );
 
-"""Compile a checker fixture and run the type check pass."""
 def compile_and_check(fixture_name: str) -> JacProgram {
     program = JacProgram();
     mod = program.compile(os.path.join(CHECKER_FIXTURES, fixture_name));
