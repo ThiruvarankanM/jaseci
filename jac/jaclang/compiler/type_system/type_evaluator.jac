@@ -93,6 +93,7 @@ import from jaclang.jac0core.diagnostics {
     W1102
 }
 
+"""Types whose definitions are prefetched and cached by the type evaluator."""
 obj PrefetchedTypes {
     has none_type_class: types.ClassType | None = None,
         object_class: types.ClassType | None = None,
@@ -294,7 +295,7 @@ obj TypeEvaluator {
     def postinit -> None;
     def _load_stub_module(path: str) -> uni.Module;
     def _get_type_from_module(module: uni.Module, name: str) -> TypeBase;
-    def _prefetch_types -> None;
+    def _prefetch_types;
     def get_none_type -> TypeBase;
     def emit_diag(diag: DiagnosticInfo, nd: uni.UniNode, **kwargs: object) -> None;
     def get_index_of_symbol_resolution(symbol: uni.Symbol) -> int | None;
