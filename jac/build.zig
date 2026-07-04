@@ -255,7 +255,8 @@ pub fn build(b: *std.Build) void {
         // finds a platform-matched shim for THIS fused runtime.
         mk.addPrefixedFileArg("--pyembed=", pyembed.getEmittedBin());
         b.getInstallStep().dependOn(&pyembed_place.step);
-        if (b.option(bool, "skip-precompile", "mkpayload: skip the JIR precompile (faster link validation)") orelse false) {
+        const skip_precompile = b.option(bool, "skip-precompile", "mkpayload: skip the JIR precompile (faster link validation)") orelse false;
+        if (skip_precompile) {
             mk.addArg("--skip-precompile");
         }
         // Editable dev binary: ship a payload WITHOUT the bundled compiler and
@@ -298,6 +299,19 @@ pub fn build(b: *std.Build) void {
         // linked-source mode (no bundled compiler, no precompile).
         if (link_dir == null) {
             mk.addArg(b.fmt("--precompiled-cache={s}", .{b.pathFromRoot(".precompiled-build")}));
+        }
+
+        // Seal the runtime (issue #7135): a bundled release payload is fully
+        // source-free -- it boots from the JIR image + frozen jac0core bootstrap,
+        // with the stdlib + jaclang .py compiled to sourceless .pyc. This is the
+        // ONLY bundled shape (no source-shipping mode); it just needs a real
+        // bundled precompile, so it is inert under -Ddev/-Djaclang-dir
+        // (link-source, which serves the compiler from a live tree) and under
+        // -Dskip-precompile (link-validation builds).
+        const debug_src = b.option(bool, "debug-src", "Sealed build: embed source text in JIR so tracebacks show source lines (larger payload)") orelse false;
+        if (link_dir == null and !skip_precompile) {
+            mk.addArg("--seal");
+            if (debug_src) mk.addArg("--debug-src");
         }
 
         // Contained bun runtime: fetch the pinned bun for the target and bundle
